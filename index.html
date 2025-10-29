@@ -1,0 +1,1515 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PromptZen — Discover & Share Viral AI Prompts</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#f6efe9;
+      --card:#ffffff;
+      --muted:#7a7a8c;
+      --accent:#FF7B65; /* coral */
+      --accent-2:#ffd9c8;
+      --hover-purple:#A46BF5; /* your purple */
+      --glass: rgba(255,255,255,0.7);
+      --radius:14px;
+      --shadow: 0 10px 30px rgba(20,20,30,0.06);
+      --max-w:1200px;
+      --accent-darker: #ff6040;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: radial-gradient(circle at 20% 20%, rgba(255,235,230,0.6), transparent 10%),
+                  radial-gradient(circle at 80% 70%, rgba(240,235,255,0.4), transparent 12%),
+                  var(--bg);
+      color:#222;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding-bottom:80px;
+    }
+
+    /* top glass nav container (contained, not browser) */
+    .topbar-wrap{
+      position:sticky; top:0; z-index:999;
+      backdrop-filter: blur(6px);
+      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.7));
+      border-bottom:1px solid rgba(0,0,0,0.03);
+      box-shadow: 0 6px 18px rgba(10,10,12,0.03);
+    }
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      max-width:var(--max-w);
+      margin:0 auto;
+      padding:14px 20px;
+    }
+    .logo{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+    .logo .mark{
+      width:44px;height:44px;border-radius:10px;
+      display:flex;align-items:center;justify-content:center;color:white;font-weight:700;
+      box-shadow: var(--shadow); background: radial-gradient(circle at 30% 30%, #ffd6c6, #ff8b6b);
+    }
+    .logo .mark svg{width:22px;height:22px;fill:white}
+    .logo h1{margin:0;font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:20px;color:#ff6d57}
+    .brand-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+    /* Desktop Navigation */
+    .desktop-nav{display:flex; gap:12px; align-items:center;}
+    .desktop-nav a{color:#333;text-decoration:none;padding:10px 14px;border-radius:12px;font-weight:600}
+    .desktop-nav a.active{background:var(--accent);color:white;box-shadow:0 6px 18px rgba(255,123,101,0.18)}
+    .desktop-nav a:hover{background:var(--hover-purple); color:white; transition: background .18s}
+
+    /* Mobile Navigation */
+    .mobile-nav-toggle {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 8px;
+      border-radius: 8px;
+    }
+    .mobile-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+    }
+    .mobile-nav.active {
+      transform: translateX(0);
+    }
+    .mobile-nav-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 8px;
+      border-radius: 8px;
+    }
+    .mobile-nav-links {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+    }
+    .mobile-nav-links a {
+      color: #333;
+      text-decoration: none;
+      padding: 14px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 18px;
+      width: 200px;
+      text-align: center;
+    }
+    .mobile-nav-links a.active {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 6px 18px rgba(255,123,101,0.18);
+    }
+    .mobile-nav-links a:hover {
+      background: var(--hover-purple);
+      color: white;
+    }
+
+    .btn{
+      border:0;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer;background:transparent;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary{
+      background:var(--accent);
+      color:white;
+      box-shadow:0 8px 30px rgba(255,123,101,0.18);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--hover-purple) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 35px rgba(255,123,101,0.25);
+    }
+    .btn-ghost{
+      background:var(--accent-2);
+      color:#4a4a58;
+    }
+    .btn-ghost:hover {
+      background: var(--hover-purple);
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    /* content */
+    .hero{
+      height: 85vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 60px 20px 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-content {
+      max-width: 900px;
+      margin: 0 auto;
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeInUp 1s ease forwards;
+    }
+    .hero h2{
+      margin:0;font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:clamp(3rem, 9vw, 6rem);color:#111;
+      line-height:1.02;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    .hero .subline{
+      font-size:clamp(1rem, 3vw, 1.3rem);
+      color:var(--muted);
+      margin-top:18px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 1s ease 0.3s forwards;
+      line-height: 1.4;
+    }
+    .hero .actions{
+      margin-top:24px;
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      flex-wrap: wrap;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 1s ease 0.6s forwards;
+    }
+    .hero .stats{
+      display:flex;
+      gap:20px;
+      justify-content:center;
+      margin-top:28px;
+      flex-wrap: wrap;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 1s ease 0.9s forwards;
+    }
+    .stat{
+      background:var(--card);
+      padding:16px 22px;
+      border-radius:12px;
+      box-shadow:var(--shadow);
+      min-width: 120px;
+      flex: 1;
+      max-width: 180px;
+    }
+    .stat h3{margin:0;color:var(--accent);font-size:20px}
+    .stat p{margin:6px 0 0;color:var(--muted);font-size:14px}
+
+    /* Trending section */
+    .trending-section {
+      max-width: var(--max-w);
+      margin: 100px auto 24px;
+      padding: 0 20px;
+      text-align: center;
+    }
+    .trending-section h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+      margin-bottom: 6px;
+      line-height:1;
+    }
+    .trending-section .subtag {
+      color:var(--muted);
+      margin-bottom:28px;
+      display:block;
+      font-size:clamp(0.95rem,2.5vw,1.1rem);
+    }
+
+    /* layout panels */
+    .page{
+      max-width:var(--max-w);
+      margin:6px auto;
+      padding:0 20px;
+      display:none;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.5s ease forwards;
+    }
+    .page.active{display:block}
+
+    /* Modal pages */
+    .modal-page {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      z-index: 1000;
+      overflow-y: auto;
+      display: none;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .modal-page.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .modal-page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .modal-page-content {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 20px 40px;
+    }
+    .close-modal {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 8px;
+      border-radius: 8px;
+    }
+    .close-modal:hover {
+      background: var(--hover-purple);
+      color: white;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(3,1fr);
+      gap:18px;
+      align-items: start;
+    }
+    @media (max-width:1100px){ .grid{grid-template-columns:repeat(2,1fr)} }
+    @media (max-width:720px){ .grid{grid-template-columns:1fr} }
+
+    .card{
+      background:var(--card);
+      border-radius:14px;
+      padding:16px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      transition: transform 0.35s cubic-bezier(.2,.9,.2,1), box-shadow 0.35s;
+      position:relative;
+      height: fit-content;
+      min-height: 520px;
+    }
+    .card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 25px 60px rgba(20,20,30,0.15);
+    }
+    .card .img{
+      width:100%;
+      height:200px;
+      border-radius:10px;
+      overflow:hidden;
+      position:relative;
+      background:#eee;
+      flex-shrink: 0;
+    }
+    .card .img img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      transition: transform 0.6s cubic-bezier(.2,.9,.2,1);
+    }
+    .card:hover .img img{
+      transform: scale(1.08);
+    }
+    .card h4{
+      margin:16px 0 6px;
+      font-family:'Space Grotesk',sans-serif;
+      color:#333;
+      font-size: clamp(16px, 2.6vw, 18px);
+      line-height: 1.3;
+      transition: color .22s;
+      text-align: center;
+      font-weight: 700;
+    }
+    .card .tagline { 
+      color:var(--muted); 
+      font-size:14px; 
+      margin-bottom:12px; 
+      text-align: center;
+    }
+    .card .prompt-box{
+      background:#fff6ef;
+      padding:12px;
+      border-radius:10px;
+      border:1px solid #f2e0d6;
+      color:#4b4b5b;
+      font-size:14px;
+      line-height:1.5;
+      margin-top:8px; 
+      white-space:pre-wrap; 
+      word-wrap:break-word;
+      flex-grow: 1;
+      overflow-y: auto;
+      max-height: 120px;
+    }
+    .card .model-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .card .model-info svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+    .card .card-bottom{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin-top:16px;
+      gap:8px;
+    }
+    .copy-btn{
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:600;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      transition: all 0.25s;
+      width: 100%;
+      justify-content: center;
+      font-size: 15px;
+      box-shadow: 0 4px 15px rgba(255,123,101,0.2);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    .copy-btn:hover {
+      background: var(--hover-purple);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(164,107,245,0.3);
+    }
+    .card:hover h4 { 
+      color:var(--accent-darker); 
+    }
+
+    /* tag badge inside card if needed */
+    .badge{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#fff3f1;
+      color:var(--accent);
+      font-weight:700;
+      font-size:12px
+    }
+
+    /* form panel */
+    .panel{
+      background:var(--card);
+      padding:18px;
+      border-radius:14px;
+      box-shadow:var(--shadow);
+      margin-top:6px;
+    }
+    input[type="text"], textarea, input[type="file"], select{
+      width:100%;
+      padding:10px;
+      border-radius:10px;
+      border:1px solid #eee;
+      background:transparent;
+      font-size:14px;
+      margin-top:8px;
+    }
+    textarea{
+      min-height:140px;
+      resize:vertical
+    }
+
+    .center{
+      display:flex;
+      justify-content:center
+    }
+
+    /* login modal */
+    .modal-backdrop{
+      position:fixed;
+      left:0;
+      top:0;
+      width:100%;
+      height:100%;
+      background:rgba(10,10,12,0.4);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:2000;
+    }
+    .modal{
+      background:var(--card);
+      padding:20px;
+      border-radius:14px;
+      min-width:320px;
+      box-shadow:var(--shadow); 
+      max-width: 90vw;
+    }
+    .modal.show{
+      display:flex
+    }
+
+    footer{
+      max-width:var(--max-w);
+      margin:26px auto;
+      padding:0 20px;
+      color:var(--muted);
+      font-size:13px;
+      text-align: center;
+    }
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    footer a:hover {
+      color: var(--hover-purple);
+    }
+
+    /* small helpers */
+    .muted{color:var(--muted)}
+    .small { font-size:13px; color:var(--muted); }
+
+    /* toast */
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: rgba(34,34,34,0.95);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 12px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      box-shadow: 0 10px 30px rgba(10,10,15,0.25);
+      z-index: 9999;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .18s, transform .24s;
+      pointer-events: none;
+    }
+    .toast.show { 
+      opacity: 1; 
+      transform: translateY(0); 
+      pointer-events: auto; 
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .desktop-nav {
+        display: none;
+      }
+      .mobile-nav-toggle {
+        display: block;
+      }
+      .hero .actions {
+        flex-direction: column;
+        align-items: center;
+      }
+      .hero .actions .btn {
+        width: 100%;
+        max-width: 280px;
+        justify-content: center;
+      }
+      .hero .stats {
+        gap: 12px;
+      }
+      .stat {
+        min-width: 100px;
+        padding: 14px 16px;
+      }
+      .stat h3 {
+        font-size: 18px;
+      }
+      .modal-page-header h2 {
+        font-size: 1.5rem;
+      }
+      .modal-page-content {
+        padding: 0 15px 30px;
+      }
+      .card {
+        min-height: 500px;
+        padding: 14px;
+      }
+      .card .img {
+        height: 180px;
+      }
+      .hero {
+        height: 80vh;
+        padding: 40px 20px 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .logo h1 {
+        font-size: 18px;
+      }
+      .logo .mark {
+        width: 36px;
+        height: 36px;
+      }
+      .hero h2 {
+        font-size: clamp(1.6rem, 10vw, 2.6rem);
+      }
+      .hero .subline {
+        font-size: 1rem;
+      }
+      .stat {
+        min-width: 80px;
+        padding: 12px 10px;
+      }
+      .stat h3 {
+        font-size: 16px;
+      }
+      .stat p {
+        font-size: 12px;
+      }
+      .card {
+        min-height: 480px;
+      }
+      .card .img {
+        height: 160px;
+      }
+      .copy-btn {
+        padding: 10px 16px;
+        font-size: 14px;
+      }
+      .trending-section .subtag {
+        margin-bottom: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar-wrap">
+    <header>
+      <div class="logo">
+        <div class="mark" aria-hidden="true">
+          <!-- star svg -->
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M12 2.5l2.3 4.7 5.2.8-3.8 3.7.9 5.1L12 15.9l-4.6 2.4.9-5.1L4.5 8.0l5.2-.8L12 2.5z"/>
+          </svg>
+        </div>
+        <div>
+          <h1>PromptZen</h1>
+          <div class="brand-sub">By Code Ronins</div>
+        </div>
+      </div>
+
+      <!-- Desktop Navigation -->
+      <nav class="desktop-nav">
+        <a id="navHome" class="active" href="#" onclick="navTo('home')">Home</a>
+        <a id="navGallery" href="#" onclick="openModalPage('gallery')">Gallery</a>
+        <a id="navMy" href="#" onclick="openModalPage('my')">My Prompts</a>
+        <a id="navLogin" href="#" onclick="openLogin()">Login</a>
+        <a id="navRegister" href="#" onclick="openRegister()">Register</a>
+      </nav>
+
+      <!-- Mobile Navigation Toggle -->
+      <button class="mobile-nav-toggle" onclick="toggleMobileNav()">☰</button>
+    </header>
+  </div>
+
+  <!-- Mobile Navigation Menu -->
+  <div class="mobile-nav" id="mobileNav">
+    <button class="mobile-nav-close" onclick="toggleMobileNav()">×</button>
+    <div class="mobile-nav-links">
+      <a id="mobileNavHome" class="active" href="#" onclick="navToMobile('home')">Home</a>
+      <a id="mobileNavGallery" href="#" onclick="openModalPageMobile('gallery')">Gallery</a>
+      <a id="mobileNavMy" href="#" onclick="openModalPageMobile('my')">My Prompts</a>
+      <a id="mobileNavLogin" href="#" onclick="openLoginMobile()">Login</a>
+      <a id="mobileNavRegister" href="#" onclick="openRegisterMobile()">Register</a>
+    </div>
+  </div>
+
+  <!-- HERO (home) -->
+  <section class="hero">
+    <div class="hero-content">
+      <h2><span style="color:#000">Discover & Share</span><br><span style="display:block;margin-top:8px;color:var(--accent);">AI Prompts</span></h2>
+      <div class="subline">Discover, submit, and manage creative AI prompts. Join a community of prompt engineers and creators pushing the boundaries of what's possible.</div>
+
+      <div class="actions">
+        <button class="btn-primary btn" onclick="openModalPage('my')">
+          Submit Your Prompt
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button class="btn btn-ghost" onclick="openModalPage('gallery')">Explore Gallery</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <h3 id="statPrompts">0</h3>
+          <p>Prompts Shared</p>
+        </div>
+        <div class="stat">
+          <h3 id="statUsers">0</h3>
+          <p>Active Users</p>
+        </div>
+        <div class="stat">
+          <h3 id="statCats">12+</h3>
+          <p>Categories</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trending Section -->
+  <section class="trending-section">
+    <h3 id="trendingTitle">Trending Prompts</h3>
+    <div id="trendingSub" class="subtag">Explore verified AI prompts with stunning visuals — copy any prompt instantly</div>
+    <div id="trendingGrid" class="grid"></div>
+  </section>
+
+  <!-- Modal Pages -->
+  <div id="modalGallery" class="modal-page">
+    <div class="modal-page-header">
+      <h2 style="font-family:'Space Grotesk',sans-serif;margin:0">Gallery</h2>
+      <button class="close-modal" onclick="closeModalPage('gallery')">×</button>
+    </div>
+    <div class="modal-page-content">
+      <div class="muted" style="margin-bottom:12px">All community prompts with sample images</div>
+      <div id="galleryGrid" class="grid"></div>
+    </div>
+  </div>
+
+  <div id="modalMy" class="modal-page">
+    <div class="modal-page-header">
+      <h2 style="font-family:'Space Grotesk',sans-serif;margin:0">My Prompts</h2>
+      <button class="close-modal" onclick="closeModalPage('my')">×</button>
+    </div>
+    <div class="modal-page-content">
+      <div style="display:flex;gap:18px;flex-wrap:wrap">
+        <div style="flex:1;min-width:320px">
+          <div class="panel">
+            <h4 style="font-family:'Space Grotesk',sans-serif;margin:0 0 6px">Submit Prompt</h4>
+            <div class="muted">Enter prompt details and sample image. Both will be uploaded to server and shown in Gallery after submission.</div>
+
+            <label>Username *</label>
+            <input id="fusername" type="text" placeholder="Your name" />
+
+            <label>Prompt Title *</label>
+            <input id="ftitle" type="text" placeholder="Give your prompt a catchy title" />
+
+            <label>Tagline *</label>
+            <input id="ftagline" type="text" placeholder="Short description of your prompt" />
+
+            <label>AI Model *</label>
+            <select id="fmodel">
+              <option value="">Select AI Model</option>
+              <option value="ChatGPT">ChatGPT</option>
+              <option value="Gemini">Gemini</option>
+              <option value="Midjourney">Midjourney</option>
+              <option value="DALL-E">DALL-E</option>
+              <option value="Stable Diffusion">Stable Diffusion</option>
+              <option value="Claude">Claude</option>
+              <option value="Multiple">Multiple Models</option>
+              <option value="Other">Other</option>
+            </select>
+
+            <label>Prompt Text *</label>
+            <textarea id="ftext" placeholder="Describe the prompt (style, mood, lens, color grading, etc.)"></textarea>
+
+            <label>Upload sample image</label>
+            <input id="fimage" type="file" accept="image/*" />
+            <div id="fpreview" style="margin-top:10px"></div>
+
+            <div style="display:flex;gap:10px;margin-top:12px">
+              <button id="submitBtn" class="btn-primary btn">
+                Submit
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <button id="clearBtn" class="btn btn-ghost">Clear</button>
+            </div>
+            <div class="muted" style="margin-top:10px">Notes: Images up to 10MB. Allowed: png, jpg, jpeg, webp, gif.</div>
+          </div>
+        </div>
+
+        <div style="width:380px;min-width:260px">
+          <div class="panel">
+            <h4 style="margin:0;font-family:'Space Grotesk',sans-serif">My Submitted Prompts</h4>
+            <div class="muted" style="margin-top:8px">Prompts you submitted will appear here after submission.</div>
+            <div id="myPromptsList" style="margin-top:12px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- login modal -->
+  <div id="modal" class="modal-backdrop">
+    <div class="modal">
+      <h3 style="margin:0">Login</h3>
+      <div style="margin-top:8px">
+        <label>Username</label>
+        <input id="loginUser" type="text" placeholder="username"/>
+        <label style="margin-top:8px">Password</label>
+        <input id="loginPass" type="password" placeholder="password"/>
+        <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+          <button onclick="closeLogin()" class="btn">Cancel</button>
+          <button class="btn-primary btn" onclick="doLogin()">Login</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- register modal -->
+  <div id="registerModal" class="modal-backdrop">
+    <div class="modal">
+      <h3 style="margin:0">Register</h3>
+      <div style="margin-top:8px">
+        <label>Username</label>
+        <input id="registerUser" type="text" placeholder="username"/>
+        <label style="margin-top:8px">Email</label>
+        <input id="registerEmail" type="email" placeholder="email"/>
+        <label style="margin-top:8px">Password</label>
+        <input id="registerPass" type="password" placeholder="password"/>
+        <label style="margin-top:8px">Confirm Password</label>
+        <input id="registerConfirmPass" type="password" placeholder="confirm password"/>
+        <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+          <button onclick="closeRegister()" class="btn">Cancel</button>
+          <button class="btn-primary btn" onclick="doRegister()">Register</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- toast for copy -->
+  <div id="toast" class="toast" aria-live="polite" role="status" style="display:flex;align-items:center;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex:0 0 18px">
+      <path d="M20 6L9 17l-5-5" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div id="toastText">Copied to clipboard</div>
+  </div>
+
+  <footer>
+    <div style="max-width:var(--max-w);margin:0 auto;padding:0 20px;text-align:center">
+      <div>© 2025 PromptZen — by <a href="https://coderonins.vercel.app" target="_blank">Code Ronins</a></div>
+      <div>Made with ♥</div>
+    </div>
+  </footer>
+
+<script>
+/* ---------- CONFIG ---------- */
+const BACKEND_BASE = '/api'; // Relative path for same domain deployment
+/* ---------------------------- */
+
+let currentUser = { username: null, role: 'user' };
+let authToken = localStorage.getItem('promptzen_token');
+
+/* ---------- API Helper Functions ---------- */
+async function apiRequest(endpoint, options = {}) {
+    const url = `${BACKEND_BASE}${endpoint}`;
+    const config = {
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+        },
+        ...options,
+    };
+
+    if (authToken) {
+        config.headers.Authorization = `Bearer ${authToken}`;
+    }
+
+    try {
+        const response = await fetch(url, config);
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || data.detail || 'Request failed');
+        }
+        
+        return data;
+    } catch (error) {
+        console.error('API request failed:', error);
+        throw error;
+    }
+}
+
+async function apiFormRequest(endpoint, formData) {
+    const url = `${BACKEND_BASE}${endpoint}`;
+    const config = {
+        method: 'POST',
+        headers: {
+            'Authorization': authToken ? `Bearer ${authToken}` : '',
+        },
+        body: formData,
+    };
+
+    try {
+        const response = await fetch(url, config);
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || data.detail || 'Request failed');
+        }
+        
+        return data;
+    } catch (error) {
+        console.error('API form request failed:', error);
+        throw error;
+    }
+}
+
+/* ---------- Authentication Functions ---------- */
+async function doLogin() {
+    const username = document.getElementById('loginUser').value.trim();
+    const password = document.getElementById('loginPass').value;
+    
+    if (!username || !password) {
+        alert('Please enter username and password');
+        return;
+    }
+
+    try {
+        const data = await apiRequest('/login/', {
+            method: 'POST',
+            body: JSON.stringify({ username, password }),
+        });
+
+        authToken = data.access;
+        localStorage.setItem('promptzen_token', data.access);
+        localStorage.setItem('promptzen_refresh', data.refresh);
+        localStorage.setItem('promptzen_user', JSON.stringify(data.user));
+        
+        currentUser = data.user;
+        alert('Login successful!');
+        closeLogin();
+        updateAuthUI();
+        
+        loadTrending();
+        loadGallery();
+        loadMyPrompts();
+    } catch (error) {
+        alert(`Login failed: ${error.message}`);
+    }
+}
+
+async function doRegister() {
+    const username = document.getElementById('registerUser').value.trim();
+    const email = document.getElementById('registerEmail').value.trim();
+    const password = document.getElementById('registerPass').value;
+    const confirmPassword = document.getElementById('registerConfirmPass').value;
+
+    if (!username || !email || !password) {
+        alert('Please fill all fields');
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        alert('Passwords do not match');
+        return;
+    }
+
+    try {
+        const data = await apiRequest('/register/', {
+            method: 'POST',
+            body: JSON.stringify({ username, email, password, role: 'user' }),
+        });
+
+        authToken = data.access;
+        localStorage.setItem('promptzen_token', data.access);
+        localStorage.setItem('promptzen_refresh', data.refresh);
+        localStorage.setItem('promptzen_user', JSON.stringify(data.user));
+        
+        currentUser = data.user;
+        alert('Registration successful!');
+        closeRegister();
+        updateAuthUI();
+    } catch (error) {
+        alert(`Registration failed: ${error.message}`);
+    }
+}
+
+function logout() {
+    authToken = null;
+    currentUser = { username: null, role: 'user' };
+    localStorage.removeItem('promptzen_token');
+    localStorage.removeItem('promptzen_refresh');
+    localStorage.removeItem('promptzen_user');
+    updateAuthUI();
+    loadTrending();
+    loadGallery();
+    loadMyPrompts();
+}
+
+/* ---------- Load stored user ---------- */
+(function() {
+    const token = localStorage.getItem('promptzen_token');
+    const userData = localStorage.getItem('promptzen_user');
+    
+    if (token && userData) {
+        try {
+            authToken = token;
+            currentUser = JSON.parse(userData);
+        } catch (e) {
+            console.error('Error loading user data:', e);
+        }
+    }
+    updateAuthUI();
+})();
+
+/* ---------- Backend fetch functions ---------- */
+async function getTrendingPrompts() {
+    try {
+        const prompts = await apiRequest('/prompts/');
+        return prompts.filter(p => p.is_trending && p.status === 'approved');
+    } catch (error) {
+        console.error('Failed to fetch trending prompts:', error);
+        return [];
+    }
+}
+
+async function getGalleryPrompts() {
+    try {
+        const prompts = await apiRequest('/prompts/');
+        return prompts.filter(p => p.status === 'approved');
+    } catch (error) {
+        console.error('Failed to fetch gallery prompts:', error);
+        return [];
+    }
+}
+
+async function getUserPrompts() {
+    if (!currentUser.username) return [];
+    
+    try {
+        return await apiRequest('/prompts/my/');
+    } catch (error) {
+        console.error('Failed to fetch user prompts:', error);
+        return [];
+    }
+}
+
+/* ---------- Render functions ---------- */
+function formatDate(iso){
+    try {
+        return new Date(iso).toLocaleDateString();
+    } catch(e) {
+        return iso;
+    }
+}
+
+function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function makeCardElement(prompt){
+    const container = document.createElement('div');
+    container.className = 'card fade-in';
+    container.dataset.id = prompt.id;
+
+    if (prompt.is_trending) {
+        const badge = document.createElement('div');
+        badge.className = 'badge';
+        badge.textContent = 'Trending';
+        badge.style.position = 'absolute';
+        badge.style.top = '10px';
+        badge.style.right = '10px';
+        badge.style.zIndex = '1';
+        container.appendChild(badge);
+    }
+
+    const imgWrap = document.createElement('div');
+    imgWrap.className = 'img';
+    if(prompt.image_url){
+        const img = document.createElement('img');
+        img.src = prompt.image_url;
+        img.alt = prompt.title || 'prompt image';
+        imgWrap.appendChild(img);
+    } else {
+        imgWrap.textContent = 'No image';
+        imgWrap.style.display = 'flex';
+        imgWrap.style.alignItems = 'center';
+        imgWrap.style.justifyContent = 'center';
+        imgWrap.style.color = 'var(--muted)';
+    }
+    container.appendChild(imgWrap);
+
+    const h = document.createElement('h4');
+    h.innerHTML = `<span>${escapeHtml(prompt.title)}</span>`;
+    container.appendChild(h);
+
+    const tag = document.createElement('div');
+    tag.className = 'tagline';
+    tag.textContent = prompt.tagline || `By ${prompt.username} • ${formatDate(prompt.created)}`;
+    container.appendChild(tag);
+
+    const pbox = document.createElement('div');
+    pbox.className = 'prompt-box';
+    pbox.textContent = prompt.text;
+    container.appendChild(pbox);
+
+    const modelInfo = document.createElement('div');
+    modelInfo.className = 'model-info';
+    modelInfo.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Works with: ${prompt.model}</span>
+    `;
+    container.appendChild(modelInfo);
+
+    const bottom = document.createElement('div');
+    bottom.className = 'card-bottom';
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-btn';
+    copyBtn.title = 'Copy prompt text';
+    copyBtn.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 12H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Copy the Prompt
+    `;
+    bottom.appendChild(copyBtn);
+
+    copyBtn.addEventListener('click', async ()=>{
+        try {
+            await navigator.clipboard.writeText(prompt.text);
+            showToast('Prompt copied to clipboard');
+            const originalHTML = copyBtn.innerHTML;
+            copyBtn.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Copied!
+            `;
+            setTimeout(()=> {
+                copyBtn.innerHTML = originalHTML;
+            }, 2000);
+        } catch(e){
+            alert('Copy failed — your browser blocked clipboard access.');
+        }
+    });
+
+    container.appendChild(bottom);
+    return container;
+}
+
+/* ---------- Load Trending ---------- */
+async function loadTrending(){
+    const grid = document.getElementById('trendingGrid');
+    grid.innerHTML = '<div class="muted">Loading…</div>';
+    
+    try {
+        const prompts = await getTrendingPrompts();
+        grid.innerHTML = '';
+        
+        const first = prompts.slice(0, 6);
+        first.forEach(p => {
+            grid.appendChild(makeCardElement(p));
+        });
+        
+        updateStats();
+        
+        setTimeout(() => {
+            const cards = grid.querySelectorAll('.fade-in');
+            cards.forEach(card => { card.classList.add('visible'); });
+        }, 80);
+    } catch (error) {
+        grid.innerHTML = '<div class="muted">Failed to load trending prompts</div>';
+    }
+}
+
+/* ---------- Load Gallery ---------- */
+async function loadGallery(){
+    const grid = document.getElementById('galleryGrid');
+    grid.innerHTML = '<div class="muted">Loading…</div>';
+    
+    try {
+        const prompts = await getGalleryPrompts();
+        grid.innerHTML = '';
+        
+        prompts.forEach(p => {
+            const el = makeCardElement(p);
+            grid.appendChild(el);
+        });
+        
+        updateStats();
+        
+        setTimeout(() => {
+            const cards = grid.querySelectorAll('.fade-in');
+            cards.forEach(c => c.classList.add('visible'));
+        }, 80);
+    } catch (error) {
+        grid.innerHTML = '<div class="muted">Failed to load gallery prompts</div>';
+    }
+}
+
+/* ---------- My prompts ---------- */
+async function loadMyPrompts(){
+    const list = document.getElementById('myPromptsList');
+    
+    if (!currentUser.username) {
+        list.innerHTML = '<div class="muted">Login to see your prompts here.</div>';
+        return;
+    }
+    
+    try {
+        const prompts = await getUserPrompts();
+        
+        if (prompts.length === 0) {
+            list.innerHTML = '<div class="muted">You have no prompts yet.</div>';
+        } else {
+            list.innerHTML = prompts.map(p => `
+                <div style="margin-bottom:10px;padding:12px;border-radius:10px;background:#fff7f2">
+                    <strong>${escapeHtml(p.title)}</strong>
+                    <div style="font-size:12px;color:${p.status === 'approved' ? 'green' : p.status === 'rejected' ? 'red' : 'orange'}; margin-top:4px">
+                        Status: ${p.status.toUpperCase()}
+                    </div>
+                    <div class="muted" style="font-size:12px; margin-top:4px">${formatDate(p.created)}</div>
+                    ${currentUser.role === 'admin' ? `
+                        <div style="margin-top:8px">
+                            <button onclick="approvePrompt(${p.id})" style="background:green;color:white;border:none;padding:4px 8px;border-radius:4px;margin-right:4px;font-size:12px">Approve</button>
+                            <button onclick="rejectPrompt(${p.id})" style="background:red;color:white;border:none;padding:4px 8px;border-radius:4px;font-size:12px">Reject</button>
+                            <button onclick="toggleTrending(${p.id}, ${!p.is_trending})" style="background:${p.is_trending ? 'orange' : 'blue'};color:white;border:none;padding:4px 8px;border-radius:4px;margin-left:4px;font-size:12px">
+                                ${p.is_trending ? 'Remove Trending' : 'Make Trending'}
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        list.innerHTML = '<div class="muted">Failed to load your prompts</div>';
+    }
+}
+
+/* ---------- Update stats ---------- */
+async function updateStats(){
+    try {
+        const galleryPrompts = await getGalleryPrompts();
+        document.getElementById('statPrompts').textContent = galleryPrompts.length;
+        
+        const users = new Set(galleryPrompts.map(p => p.username));
+        document.getElementById('statUsers').textContent = users.size;
+    } catch (error) {
+        console.error('Failed to update stats:', error);
+    }
+}
+
+/* ---------- Submission handlers ---------- */
+document.getElementById('fimage').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    const preview = document.getElementById('fpreview');
+    preview.innerHTML = '';
+    if(!file) return;
+    const url = URL.createObjectURL(file);
+    const img = document.createElement('img'); 
+    img.src = url; 
+    img.style.maxWidth='100%'; 
+    img.style.borderRadius='8px';
+    preview.appendChild(img);
+});
+
+document.getElementById('submitBtn').addEventListener('click', async ()=>{
+    const username = document.getElementById('fusername').value.trim();
+    const title = document.getElementById('ftitle').value.trim();
+    const tagline = document.getElementById('ftagline').value.trim();
+    const model = document.getElementById('fmodel').value;
+    const text = document.getElementById('ftext').value.trim();
+    const file = document.getElementById('fimage').files[0];
+    
+    if(!username || !title || !tagline || !model || !text) {
+        return alert('Please fill all required fields: Username, Title, Tagline, Model, and Prompt Text');
+    }
+
+    const formData = new FormData();
+    formData.append('username', username);
+    formData.append('title', title);
+    formData.append('tagline', tagline);
+    formData.append('model', model);
+    formData.append('text', text);
+    if (file) {
+        formData.append('image', file);
+    }
+
+    try {
+        const newPrompt = await apiFormRequest('/prompts/create/', formData);
+        alert('Prompt submitted successfully! It will appear in the gallery after admin approval.');
+        
+        document.getElementById('fusername').value = '';
+        document.getElementById('ftitle').value = '';
+        document.getElementById('ftagline').value = '';
+        document.getElementById('fmodel').value = '';
+        document.getElementById('ftext').value = '';
+        document.getElementById('fimage').value = '';
+        document.getElementById('fpreview').innerHTML = '';
+        
+        loadMyPrompts();
+    } catch (error) {
+        alert(`Submission failed: ${error.message}`);
+    }
+});
+
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+    document.getElementById('fusername').value = '';
+    document.getElementById('ftitle').value = '';
+    document.getElementById('ftagline').value = '';
+    document.getElementById('fmodel').value = '';
+    document.getElementById('ftext').value = '';
+    document.getElementById('fimage').value = '';
+    document.getElementById('fpreview').innerHTML = '';
+});
+
+/* ---------- Admin Functions ---------- */
+async function approvePrompt(promptId) {
+    try {
+        await apiRequest(`/prompts/${promptId}/status/`, {
+            method: 'PUT',
+            body: JSON.stringify({ status: 'approved' }),
+        });
+        alert('Prompt approved!');
+        loadGallery();
+        loadTrending();
+        loadMyPrompts();
+    } catch (error) {
+        alert(`Failed to approve prompt: ${error.message}`);
+    }
+}
+
+async function rejectPrompt(promptId) {
+    try {
+        await apiRequest(`/prompts/${promptId}/status/`, {
+            method: 'PUT',
+            body: JSON.stringify({ status: 'rejected' }),
+        });
+        alert('Prompt rejected!');
+        loadMyPrompts();
+    } catch (error) {
+        alert(`Failed to reject prompt: ${error.message}`);
+    }
+}
+
+async function toggleTrending(promptId, isTrending) {
+    try {
+        await apiRequest(`/prompts/${promptId}/status/`, {
+            method: 'PUT',
+            body: JSON.stringify({ is_trending: isTrending }),
+        });
+        alert(`Prompt ${isTrending ? 'added to' : 'removed from'} trending!`);
+        loadGallery();
+        loadTrending();
+        loadMyPrompts();
+    } catch (error) {
+        alert(`Failed to update trending status: ${error.message}`);
+    }
+}
+
+/* ---------- Modal Functions ---------- */
+function openLogin(){ 
+    document.getElementById('modal').style.display='flex'; 
+}
+
+function closeLogin(){ 
+    document.getElementById('modal').style.display='none'; 
+}
+
+function openRegister(){ 
+    document.getElementById('registerModal').style.display='flex'; 
+}
+
+function closeRegister(){ 
+    document.getElementById('registerModal').style.display='none'; 
+}
+
+function openRegisterMobile() {
+    openRegister();
+    toggleMobileNav();
+}
+
+function updateAuthUI(){
+    const navLogin = document.getElementById('navLogin');
+    const mobileNavLogin = document.getElementById('mobileNavLogin');
+    const navRegister = document.getElementById('navRegister');
+    const mobileNavRegister = document.getElementById('mobileNavRegister');
+
+    if (currentUser && currentUser.username) {
+        navLogin.textContent = 'Logout (' + currentUser.username + ')';
+        navLogin.onclick = () => { if(confirm('Logout?')) { logout(); } };
+        mobileNavLogin.textContent = 'Logout (' + currentUser.username + ')';
+        mobileNavLogin.onclick = () => { if(confirm('Logout?')) { logout(); } };
+        
+        navRegister.style.display = 'none';
+        mobileNavRegister.style.display = 'none';
+    } else {
+        navLogin.textContent = 'Login';
+        navLogin.onclick = () => openLogin();
+        mobileNavLogin.textContent = 'Login';
+        mobileNavLogin.onclick = () => openLoginMobile();
+        
+        navRegister.style.display = 'block';
+        mobileNavRegister.style.display = 'block';
+    }
+}
+
+/* ---------- Navigation Functions ---------- */
+function toggleMobileNav() {
+    const mobileNav = document.getElementById('mobileNav');
+    mobileNav.classList.toggle('active');
+    document.body.style.overflow = mobileNav.classList.contains('active') ? 'hidden' : 'auto';
+}
+
+function navToMobile(page) {
+    navTo(page);
+    toggleMobileNav();
+}
+
+function openModalPageMobile(page) {
+    openModalPage(page);
+    toggleMobileNav();
+}
+
+function openLoginMobile() {
+    openLogin();
+    toggleMobileNav();
+}
+
+function navTo(page){
+    const pages = ['home','gallery','my'];
+    pages.forEach(p=>{
+        const pageEl = document.getElementById('page'+capitalize(p));
+        if(pageEl) pageEl.classList.remove('active');
+        const nav = document.getElementById('nav'+capitalize(p));
+        if(nav) nav.classList.remove('active');
+        const mnav = document.getElementById('mobileNav'+capitalize(p));
+        if(mnav) mnav.classList.remove('active');
+    });
+    
+    const navId = (page === 'home') ? 'navHome' : (page === 'gallery' ? 'navGallery' : 'navMy');
+    const navItem = document.getElementById(navId);
+    if(navItem) navItem.classList.add('active');
+    const mobileItem = document.getElementById('mobileNav'+capitalize(page));
+    if(mobileItem) mobileItem.classList.add('active');
+
+    if(page === 'gallery') loadGallery();
+    if(page === 'home') loadTrending();
+    if(page === 'my') loadMyPrompts();
+
+    window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function openModalPage(page) {
+    const el = document.getElementById('modal' + capitalize(page));
+    if(!el) return;
+    el.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    if(page === 'gallery') loadGallery();
+    else if(page === 'my') loadMyPrompts();
+}
+
+function closeModalPage(page) {
+    const el = document.getElementById('modal' + capitalize(page));
+    if(!el) return;
+    el.classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
+
+function capitalize(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
+/* ---------- Toast (copy success) ---------- */
+let toastTimer = null;
+function showToast(msg){
+    const toast = document.getElementById('toast');
+    const ttext = document.getElementById('toastText');
+    ttext.textContent = msg || 'Copied to clipboard';
+    toast.classList.add('show');
+    toast.style.display = 'flex';
+    if(toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>{
+        toast.classList.remove('show');
+        setTimeout(()=>{ toast.style.display = 'none'; }, 280);
+    }, 1700);
+}
+
+/* ---------- init ---------- */
+(async function init(){
+    await loadTrending();
+    navTo('home');
+})();
+</script>
+
+</body>
+</html>
