@@ -988,15 +988,39 @@
   <!-- login modal -->
   <div id="modal" class="modal-backdrop">
     <div class="modal">
-      <h3 style="margin:0">Login</h3>
-      <div style="margin-top:8px">
-        <label>Username</label>
-        <input id="loginUser" type="text" placeholder="username"/>
-        <label style="margin-top:8px">Password</label>
-        <input id="loginPass" type="password" placeholder="password"/>
-        <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
-          <button onclick="closeLogin()" class="btn">Cancel</button>
-          <button class="btn-primary btn" onclick="doLogin()">Login</button>
+      <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+        <button id="loginTab" class="btn btn-primary" style="flex: 1;" onclick="switchAuthTab('login')">Login</button>
+        <button id="registerTab" class="btn btn-ghost" style="flex: 1;" onclick="switchAuthTab('register')">Register</button>
+      </div>
+      
+      <div id="loginForm">
+        <h3 style="margin:0">Login</h3>
+        <div style="margin-top:8px">
+          <label>Username</label>
+          <input id="loginUser" type="text" placeholder="username"/>
+          <label style="margin-top:8px">Password</label>
+          <input id="loginPass" type="password" placeholder="password"/>
+          <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+            <button onclick="closeLogin()" class="btn">Cancel</button>
+            <button class="btn-primary btn" onclick="doLogin()">Login</button>
+          </div>
+        </div>
+      </div>
+      
+      <div id="registerForm" style="display: none;">
+        <h3 style="margin:0">Register</h3>
+        <div style="margin-top:8px">
+          <label>Username</label>
+          <input id="registerUser" type="text" placeholder="Choose a username (3-20 characters)"/>
+          <label style="margin-top:8px">Password</label>
+          <input id="registerPass" type="password" placeholder="At least 6 characters"/>
+          <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">
+            Username must be 3-20 alphanumeric characters. Password must be at least 6 characters.
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+            <button onclick="closeLogin()" class="btn">Cancel</button>
+            <button class="btn-primary btn" onclick="doRegister()">Register</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1019,7 +1043,8 @@
 
 <script>
 /* ---------- CONFIG ---------- */
-const BACKEND_BASE = 'http://localhost:5000';
+// Update this with your Render backend URL after deployment
+const BACKEND_BASE = 'https://promptzentester-backend-1.onrender.com';
 /* ---------------------------- */
 
 let currentUser = { username:null, role:'user' };
@@ -1120,8 +1145,74 @@ function closeModalPage(page) {
 
 function capitalize(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
 
-function openLogin(){ document.getElementById('modal').style.display='flex'; }
+function switchAuthTab(tab) {
+  const loginTab = document.getElementById('loginTab');
+  const registerTab = document.getElementById('registerTab');
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  
+  if (tab === 'login') {
+    loginTab.className = 'btn btn-primary';
+    registerTab.className = 'btn btn-ghost';
+    loginForm.style.display = 'block';
+    registerForm.style.display = 'none';
+  } else {
+    loginTab.className = 'btn btn-ghost';
+    registerTab.className = 'btn btn-primary';
+    loginForm.style.display = 'none';
+    registerForm.style.display = 'block';
+  }
+}
+
+function openLogin(){ 
+  document.getElementById('modal').style.display='flex'; 
+  switchAuthTab('login');
+}
 function closeLogin(){ document.getElementById('modal').style.display='none'; }
+
+async function doRegister(){
+  const u = document.getElementById('registerUser').value.trim();
+  const p = document.getElementById('registerPass').value;
+  
+  if(!u || !p) return alert('Please enter username and password');
+  
+  // Basic validation
+  if (!u.match(/^[a-zA-Z0-9]{3,20}$/)) {
+    return alert('Username must be 3-20 alphanumeric characters');
+  }
+  if (p.length < 6) {
+    return alert('Password must be at least 6 characters');
+  }
+
+  try {
+    const res = await fetch(BACKEND_BASE + '/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p })
+    });
+
+    if(res.ok) {
+      const data = await res.json();
+      currentUser = { username: data.username, role: data.role };
+      setAuthToken(data.access_token);
+      localStorage.setItem('promptzen_user', JSON.stringify(currentUser));
+      showToast('Registration successful! You are now logged in.');
+      closeLogin();
+      updateAuthUI();
+      updateSubmitForm();
+      loadTrending();
+      loadGallery();
+      loadMyPrompts();
+    } else {
+      const errorData = await res.json().catch(() => ({ error: 'Registration failed' }));
+      alert(errorData.error || 'Registration failed. Please try a different username.');
+    }
+  } catch(e) {
+    console.error(e);
+    alert('Registration error. Please check if the backend server is running.');
+  }
+}
+
 async function doLogin(){
   const u = document.getElementById('loginUser').value.trim();
   const p = document.getElementById('loginPass').value;
@@ -1142,6 +1233,7 @@ async function doLogin(){
       showToast('Login successful!');
       closeLogin();
       updateAuthUI();
+      updateSubmitForm();
       loadTrending();
       loadGallery();
       loadMyPrompts();
@@ -1190,6 +1282,7 @@ function logout(){
   setAuthToken(null);
   currentUser = { username:null, role:'user' };
   updateAuthUI();
+  updateSubmitForm();
   showToast('Logged out successfully');
   loadTrending();
   loadGallery();
@@ -1798,6 +1891,7 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
     return alert('Please fill all required fields: Username, Title, Tagline, Model, and Prompt Text');
   }
 
+  // If user is logged in, use their username from account
   const submitUsername = currentUser.username || username;
 
   const formData = new FormData();
