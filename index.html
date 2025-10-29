@@ -21,6 +21,9 @@
       --shadow: 0 10px 30px rgba(20,20,30,0.06);
       --max-w:1200px;
       --accent-darker: #ff6040;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -167,6 +170,18 @@
       color: white;
       transform: translateY(-2px);
     }
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+    .btn-warning {
+      background: var(--warning);
+      color: white;
+    }
 
     /* content */
     .hero{
@@ -233,6 +248,39 @@
     }
     .stat h3{margin:0;color:var(--accent);font-size:20px}
     .stat p{margin:6px 0 0;color:var(--muted);font-size:14px}
+
+    /* Admin Dashboard */
+    .admin-dashboard {
+      max-width: var(--max-w);
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .admin-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .admin-stat {
+      background: var(--card);
+      padding: 24px;
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .admin-stat h3 {
+      margin: 0;
+      font-size: 32px;
+      color: var(--accent);
+    }
+    .admin-stat.pending h3 { color: var(--warning); }
+    .admin-stat.approved h3 { color: var(--success); }
+    .admin-stat.trending h3 { color: var(--hover-purple); }
+    .admin-stat p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-weight: 600;
+    }
 
     /* Trending section */
     .trending-section {
@@ -439,6 +487,48 @@
       color:var(--accent-darker); 
     }
 
+    /* Admin specific styles */
+    .admin-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+    .admin-actions .btn {
+      flex: 1;
+      min-width: 120px;
+      justify-content: center;
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      background: var(--card);
+    }
+    .bulk-actions {
+      background: var(--card);
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .selected-count {
+      background: var(--accent);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
     /* tag badge inside card if needed */
     .badge{
       display:inline-block;
@@ -448,6 +538,14 @@
       color:var(--accent);
       font-weight:700;
       font-size:12px
+    }
+    .badge.pending {
+      background: #fff8e6;
+      color: var(--warning);
+    }
+    .badge.approved {
+      background: #f0f9ff;
+      color: var(--success);
     }
 
     /* form panel */
@@ -613,6 +711,16 @@
         height: 80vh;
         padding: 40px 20px 20px;
       }
+      .admin-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .admin-actions {
+        flex-direction: column;
+      }
+      .bulk-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
     }
 
     @media (max-width: 480px) {
@@ -652,6 +760,9 @@
       .trending-section .subtag {
         margin-bottom: 20px;
       }
+      .admin-stats {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -661,7 +772,6 @@
     <header>
       <div class="logo">
         <div class="mark" aria-hidden="true">
-          <!-- star svg -->
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <path d="M12 2.5l2.3 4.7 5.2.8-3.8 3.7.9 5.1L12 15.9l-4.6 2.4.9-5.1L4.5 8.0l5.2-.8L12 2.5z"/>
           </svg>
@@ -677,8 +787,8 @@
         <a id="navHome" class="active" href="#" onclick="navTo('home')">Home</a>
         <a id="navGallery" href="#" onclick="openModalPage('gallery')">Gallery</a>
         <a id="navMy" href="#" onclick="openModalPage('my')">My Prompts</a>
+        <a id="navAdmin" href="#" onclick="openModalPage('admin')" style="display:none">Admin</a>
         <a id="navLogin" href="#" onclick="openLogin()">Login</a>
-        <a id="navRegister" href="#" onclick="openRegister()">Register</a>
       </nav>
 
       <!-- Mobile Navigation Toggle -->
@@ -693,8 +803,8 @@
       <a id="mobileNavHome" class="active" href="#" onclick="navToMobile('home')">Home</a>
       <a id="mobileNavGallery" href="#" onclick="openModalPageMobile('gallery')">Gallery</a>
       <a id="mobileNavMy" href="#" onclick="openModalPageMobile('my')">My Prompts</a>
+      <a id="mobileNavAdmin" href="#" onclick="openModalPageMobile('admin')" style="display:none">Admin</a>
       <a id="mobileNavLogin" href="#" onclick="openLoginMobile()">Login</a>
-      <a id="mobileNavRegister" href="#" onclick="openRegisterMobile()">Register</a>
     </div>
   </div>
 
@@ -815,6 +925,66 @@
     </div>
   </div>
 
+  <!-- Admin Dashboard Modal -->
+  <div id="modalAdmin" class="modal-page">
+    <div class="modal-page-header">
+      <h2 style="font-family:'Space Grotesk',sans-serif;margin:0">Admin Dashboard</h2>
+      <button class="close-modal" onclick="closeModalPage('admin')">×</button>
+    </div>
+    <div class="modal-page-content">
+      <!-- Admin Stats -->
+      <div class="admin-stats">
+        <div class="admin-stat">
+          <h3 id="adminTotalPrompts">0</h3>
+          <p>Total Prompts</p>
+        </div>
+        <div class="admin-stat approved">
+          <h3 id="adminApprovedPrompts">0</h3>
+          <p>Approved</p>
+        </div>
+        <div class="admin-stat pending">
+          <h3 id="adminPendingPrompts">0</h3>
+          <p>Pending Review</p>
+        </div>
+        <div class="admin-stat trending">
+          <h3 id="adminTrendingPrompts">0</h3>
+          <p>Trending</p>
+        </div>
+        <div class="admin-stat">
+          <h3 id="adminTotalUsers">0</h3>
+          <p>Total Users</p>
+        </div>
+      </div>
+
+      <!-- Pending Prompts Section -->
+      <div class="panel">
+        <h4 style="font-family:'Space Grotesk',sans-serif;margin:0 0 16px">Pending Prompts for Review</h4>
+        
+        <!-- Bulk Actions -->
+        <div class="bulk-actions" style="display:none" id="bulkActions">
+          <div class="selected-count" id="selectedCount">0 selected</div>
+          <button class="btn btn-success" onclick="bulkApprovePrompts()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Approve Selected
+          </button>
+          <button class="btn btn-danger" onclick="bulkRejectPrompts()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Reject Selected
+          </button>
+          <button class="btn btn-ghost" onclick="clearSelection()">Clear Selection</button>
+        </div>
+
+        <div id="pendingPromptsList">
+          <div class="muted">Loading pending prompts...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- login modal -->
   <div id="modal" class="modal-backdrop">
     <div class="modal">
@@ -827,27 +997,6 @@
         <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
           <button onclick="closeLogin()" class="btn">Cancel</button>
           <button class="btn-primary btn" onclick="doLogin()">Login</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- register modal -->
-  <div id="registerModal" class="modal-backdrop">
-    <div class="modal">
-      <h3 style="margin:0">Register</h3>
-      <div style="margin-top:8px">
-        <label>Username</label>
-        <input id="registerUser" type="text" placeholder="username"/>
-        <label style="margin-top:8px">Email</label>
-        <input id="registerEmail" type="email" placeholder="email"/>
-        <label style="margin-top:8px">Password</label>
-        <input id="registerPass" type="password" placeholder="password"/>
-        <label style="margin-top:8px">Confirm Password</label>
-        <input id="registerConfirmPass" type="password" placeholder="confirm password"/>
-        <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
-          <button onclick="closeRegister()" class="btn">Cancel</button>
-          <button class="btn-primary btn" onclick="doRegister()">Register</button>
         </div>
       </div>
     </div>
@@ -870,266 +1019,402 @@
 
 <script>
 /* ---------- CONFIG ---------- */
-const BACKEND_BASE = '/api'; // Relative path for same domain deployment
+const BACKEND_BASE = 'http://localhost:5000';
 /* ---------------------------- */
 
-let currentUser = { username: null, role: 'user' };
+let currentUser = { username:null, role:'user' };
 let authToken = localStorage.getItem('promptzen_token');
+let selectedPrompts = new Set();
 
-/* ---------- API Helper Functions ---------- */
-async function apiRequest(endpoint, options = {}) {
-    const url = `${BACKEND_BASE}${endpoint}`;
-    const config = {
-        headers: {
-            'Content-Type': 'application/json',
-            ...options.headers,
-        },
-        ...options,
-    };
-
-    if (authToken) {
-        config.headers.Authorization = `Bearer ${authToken}`;
-    }
-
-    try {
-        const response = await fetch(url, config);
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.error || data.detail || 'Request failed');
-        }
-        
-        return data;
-    } catch (error) {
-        console.error('API request failed:', error);
-        throw error;
-    }
-}
-
-async function apiFormRequest(endpoint, formData) {
-    const url = `${BACKEND_BASE}${endpoint}`;
-    const config = {
-        method: 'POST',
-        headers: {
-            'Authorization': authToken ? `Bearer ${authToken}` : '',
-        },
-        body: formData,
-    };
-
-    try {
-        const response = await fetch(url, config);
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.error || data.detail || 'Request failed');
-        }
-        
-        return data;
-    } catch (error) {
-        console.error('API form request failed:', error);
-        throw error;
-    }
-}
-
-/* ---------- Authentication Functions ---------- */
-async function doLogin() {
-    const username = document.getElementById('loginUser').value.trim();
-    const password = document.getElementById('loginPass').value;
-    
-    if (!username || !password) {
-        alert('Please enter username and password');
-        return;
-    }
-
-    try {
-        const data = await apiRequest('/login/', {
-            method: 'POST',
-            body: JSON.stringify({ username, password }),
-        });
-
-        authToken = data.access;
-        localStorage.setItem('promptzen_token', data.access);
-        localStorage.setItem('promptzen_refresh', data.refresh);
-        localStorage.setItem('promptzen_user', JSON.stringify(data.user));
-        
-        currentUser = data.user;
-        alert('Login successful!');
-        closeLogin();
-        updateAuthUI();
-        
-        loadTrending();
-        loadGallery();
-        loadMyPrompts();
-    } catch (error) {
-        alert(`Login failed: ${error.message}`);
-    }
-}
-
-async function doRegister() {
-    const username = document.getElementById('registerUser').value.trim();
-    const email = document.getElementById('registerEmail').value.trim();
-    const password = document.getElementById('registerPass').value;
-    const confirmPassword = document.getElementById('registerConfirmPass').value;
-
-    if (!username || !email || !password) {
-        alert('Please fill all fields');
-        return;
-    }
-
-    if (password !== confirmPassword) {
-        alert('Passwords do not match');
-        return;
-    }
-
-    try {
-        const data = await apiRequest('/register/', {
-            method: 'POST',
-            body: JSON.stringify({ username, email, password, role: 'user' }),
-        });
-
-        authToken = data.access;
-        localStorage.setItem('promptzen_token', data.access);
-        localStorage.setItem('promptzen_refresh', data.refresh);
-        localStorage.setItem('promptzen_user', JSON.stringify(data.user));
-        
-        currentUser = data.user;
-        alert('Registration successful!');
-        closeRegister();
-        updateAuthUI();
-    } catch (error) {
-        alert(`Registration failed: ${error.message}`);
-    }
-}
-
-function logout() {
-    authToken = null;
-    currentUser = { username: null, role: 'user' };
+/* ---------- JWT Token Management ---------- */
+function setAuthToken(token) {
+  authToken = token;
+  if (token) {
+    localStorage.setItem('promptzen_token', token);
+  } else {
     localStorage.removeItem('promptzen_token');
-    localStorage.removeItem('promptzen_refresh');
-    localStorage.removeItem('promptzen_user');
-    updateAuthUI();
-    loadTrending();
-    loadGallery();
-    loadMyPrompts();
+  }
+}
+
+function getAuthHeaders() {
+  const headers = {
+    'Content-Type': 'application/json'
+  };
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  }
+  return headers;
+}
+
+function getAuthHeadersFormData() {
+  const headers = {};
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  }
+  return headers;
+}
+
+/* ------------------------------------------------------------------------- */
+/* UX / Nav / Modal / Auth                                                  */
+/* ------------------------------------------------------------------------- */
+function toggleMobileNav() {
+  const mobileNav = document.getElementById('mobileNav');
+  mobileNav.classList.toggle('active');
+  document.body.style.overflow = mobileNav.classList.contains('active') ? 'hidden' : 'auto';
+}
+function navToMobile(page) {
+  navTo(page);
+  toggleMobileNav();
+}
+function openModalPageMobile(page) {
+  openModalPage(page);
+  toggleMobileNav();
+}
+function openLoginMobile() {
+  openLogin();
+  toggleMobileNav();
+}
+
+function navTo(page){
+  const pages = ['home','gallery','my','admin'];
+  pages.forEach(p=>{
+    const pageEl = document.getElementById('page'+capitalize(p));
+    if(pageEl) pageEl.classList.remove('active');
+    const nav = document.getElementById('nav'+capitalize(p));
+    if(nav) nav.classList.remove('active');
+    const mnav = document.getElementById('mobileNav'+capitalize(p));
+    if(mnav) mnav.classList.remove('active');
+  });
+  
+  const navId = (page === 'home') ? 'navHome' : (page === 'gallery' ? 'navGallery' : (page === 'admin' ? 'navAdmin' : 'navMy'));
+  const navItem = document.getElementById(navId);
+  if(navItem) navItem.classList.add('active');
+  const mobileItem = document.getElementById('mobileNav'+capitalize(page));
+  if(mobileItem) mobileItem.classList.add('active');
+
+  if(page === 'gallery') loadGallery();
+  if(page === 'home') loadTrending();
+  if(page === 'my') loadMyPrompts();
+  if(page === 'admin') loadAdminDashboard();
+
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function openModalPage(page) {
+  const el = document.getElementById('modal' + capitalize(page));
+  if(!el) return;
+  el.classList.add('active');
+  document.body.style.overflow = 'hidden';
+  if(page === 'gallery') loadGallery();
+  else if(page === 'my') loadMyPrompts();
+  else if(page === 'admin') loadAdminDashboard();
+}
+function closeModalPage(page) {
+  const el = document.getElementById('modal' + capitalize(page));
+  if(!el) return;
+  el.classList.remove('active');
+  document.body.style.overflow = 'auto';
+  selectedPrompts.clear();
+  updateBulkActions();
+}
+
+function capitalize(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function openLogin(){ document.getElementById('modal').style.display='flex'; }
+function closeLogin(){ document.getElementById('modal').style.display='none'; }
+async function doLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  if(!u || !p) return alert('Please enter username and password');
+
+  try {
+    const res = await fetch(BACKEND_BASE + '/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p })
+    });
+
+    if(res.ok) {
+      const data = await res.json();
+      currentUser = { username: data.username, role: data.role };
+      setAuthToken(data.access_token);
+      localStorage.setItem('promptzen_user', JSON.stringify(currentUser));
+      showToast('Login successful!');
+      closeLogin();
+      updateAuthUI();
+      loadTrending();
+      loadGallery();
+      loadMyPrompts();
+    } else {
+      const errorData = await res.json().catch(() => ({ error: 'Login failed' }));
+      alert(errorData.error || 'Login failed. Please check your credentials.');
+    }
+  } catch(e) {
+    console.error(e);
+    alert('Login error. Please check if the backend server is running.');
+  }
+}
+
+function updateAuthUI(){
+  const navLogin = document.getElementById('navLogin');
+  const mobileNavLogin = document.getElementById('mobileNavLogin');
+  const navAdmin = document.getElementById('navAdmin');
+  const mobileNavAdmin = document.getElementById('mobileNavAdmin');
+
+  if(currentUser && currentUser.role === 'admin'){
+    navLogin.textContent = 'Logout (admin)';
+    navLogin.onclick = ()=> { if(confirm('Logout?')) { logout(); } };
+    mobileNavLogin.textContent = 'Logout (admin)';
+    mobileNavLogin.onclick = ()=> { if(confirm('Logout?')) { logout(); } };
+    navAdmin.style.display = 'flex';
+    mobileNavAdmin.style.display = 'flex';
+  } else if(currentUser && currentUser.username){
+    navLogin.textContent = 'Logout ('+currentUser.username+')';
+    navLogin.onclick = ()=> { if(confirm('Logout?')) { logout(); } };
+    mobileNavLogin.textContent = 'Logout ('+currentUser.username+')';
+    mobileNavLogin.onclick = ()=> { if(confirm('Logout?')) { logout(); } };
+    navAdmin.style.display = 'none';
+    mobileNavAdmin.style.display = 'none';
+  } else {
+    navLogin.textContent = 'Login';
+    navLogin.onclick = ()=> openLogin();
+    mobileNavLogin.textContent = 'Login';
+    mobileNavLogin.onclick = ()=> openLoginMobile();
+    navAdmin.style.display = 'none';
+    mobileNavAdmin.style.display = 'none';
+  }
+}
+
+function logout(){
+  localStorage.removeItem('promptzen_user');
+  setAuthToken(null);
+  currentUser = { username:null, role:'user' };
+  updateAuthUI();
+  showToast('Logged out successfully');
+  loadTrending();
+  loadGallery();
+  loadMyPrompts();
 }
 
 /* ---------- Load stored user ---------- */
-(function() {
-    const token = localStorage.getItem('promptzen_token');
-    const userData = localStorage.getItem('promptzen_user');
-    
-    if (token && userData) {
-        try {
-            authToken = token;
-            currentUser = JSON.parse(userData);
-        } catch (e) {
-            console.error('Error loading user data:', e);
-        }
+(function(){
+  const raw = localStorage.getItem('promptzen_user');
+  if(raw){
+    try{ 
+      currentUser = JSON.parse(raw); 
+      if (!authToken) {
+        logout();
+      }
+    }catch(e){
+      logout();
     }
-    updateAuthUI();
+  }
+  updateAuthUI();
 })();
 
 /* ---------- Backend fetch functions ---------- */
+async function fetchPromptsFromBackend(publicOnly = true) {
+  try {
+    const url = publicOnly ? '/api/prompts?public=true' : '/api/prompts';
+    const res = await fetch(BACKEND_BASE + url);
+    if (!res.ok) throw new Error('Fetch prompts failed');
+    return await res.json();
+  } catch (e) {
+    console.warn('Backend fetch failed', e);
+    return null;
+  }
+}
+
+async function fetchPendingPrompts() {
+  try {
+    const res = await fetch(BACKEND_BASE + '/api/prompts/pending', {
+      headers: getAuthHeaders()
+    });
+    if (!res.ok) throw new Error('Fetch pending prompts failed');
+    return await res.json();
+  } catch (e) {
+    console.warn('Backend pending prompts fetch failed', e);
+    return null;
+  }
+}
+
+async function fetchAdminStats() {
+  try {
+    const res = await fetch(BACKEND_BASE + '/api/admin/stats', {
+      headers: getAuthHeaders()
+    });
+    if (!res.ok) throw new Error('Fetch admin stats failed');
+    return await res.json();
+  } catch (e) {
+    console.warn('Backend admin stats fetch failed', e);
+    return null;
+  }
+}
+
+async function fetchStatsFromBackend() {
+  try {
+    const res = await fetch(BACKEND_BASE + '/api/stats');
+    if (!res.ok) throw new Error('Fetch stats failed');
+    return await res.json();
+  } catch (e) {
+    console.warn('Backend stats fetch failed', e);
+    return null;
+  }
+}
+
+/* ---------- Helper to get prompts: backend or fallback ---------- */
 async function getTrendingPrompts() {
-    try {
-        const prompts = await apiRequest('/prompts/');
-        return prompts.filter(p => p.is_trending && p.status === 'approved');
-    } catch (error) {
-        console.error('Failed to fetch trending prompts:', error);
-        return [];
-    }
+  const backend = await fetchPromptsFromBackend(true);
+  if (Array.isArray(backend)) {
+    return backend.filter(p => p.isTrending === true && p.accepted === true);
+  }
+  return [];
 }
 
 async function getGalleryPrompts() {
-    try {
-        const prompts = await apiRequest('/prompts/');
-        return prompts.filter(p => p.status === 'approved');
-    } catch (error) {
-        console.error('Failed to fetch gallery prompts:', error);
-        return [];
-    }
+  const backend = await fetchPromptsFromBackend(true);
+  if (Array.isArray(backend)) {
+    return backend.filter(p => p.accepted === true);
+  }
+  return [];
 }
 
-async function getUserPrompts() {
-    if (!currentUser.username) return [];
+async function getMyPrompts() {
+  if (!currentUser || !currentUser.username) return [];
+  
+  try {
+    const res = await fetch(BACKEND_BASE + '/api/prompts?public=false', {
+      headers: getAuthHeaders()
+    });
     
-    try {
-        return await apiRequest('/prompts/my/');
-    } catch (error) {
-        console.error('Failed to fetch user prompts:', error);
-        return [];
+    if (res.ok) {
+      const allPrompts = await res.json();
+      return allPrompts.filter(p => p.username === currentUser.username);
     }
+    return [];
+  } catch (e) {
+    console.error('Error fetching my prompts:', e);
+    return [];
+  }
 }
 
 /* ---------- Render functions ---------- */
 function formatDate(iso){
-    try {
-        return new Date(iso).toLocaleDateString();
-    } catch(e) {
-        return iso;
-    }
+  try {
+    return new Date(iso).toLocaleDateString();
+  } catch(e) {
+    return iso;
+  }
 }
-
 function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function makeCardElement(prompt){
-    const container = document.createElement('div');
-    container.className = 'card fade-in';
-    container.dataset.id = prompt.id;
+  const container = document.createElement('div');
+  container.className = 'card fade-in';
+  container.dataset.id = prompt.id;
 
-    if (prompt.is_trending) {
-        const badge = document.createElement('div');
-        badge.className = 'badge';
-        badge.textContent = 'Trending';
-        badge.style.position = 'absolute';
-        badge.style.top = '10px';
-        badge.style.right = '10px';
-        badge.style.zIndex = '1';
-        container.appendChild(badge);
-    }
+  // Add trending badge if applicable
+  if (prompt.isTrending) {
+    const badge = document.createElement('div');
+    badge.className = 'badge';
+    badge.textContent = 'Trending';
+    badge.style.position = 'absolute';
+    badge.style.top = '10px';
+    badge.style.right = '10px';
+    badge.style.zIndex = '1';
+    container.appendChild(badge);
+  }
 
-    const imgWrap = document.createElement('div');
-    imgWrap.className = 'img';
-    if(prompt.image_url){
-        const img = document.createElement('img');
-        img.src = prompt.image_url;
-        img.alt = prompt.title || 'prompt image';
-        imgWrap.appendChild(img);
-    } else {
-        imgWrap.textContent = 'No image';
-        imgWrap.style.display = 'flex';
-        imgWrap.style.alignItems = 'center';
-        imgWrap.style.justifyContent = 'center';
-        imgWrap.style.color = 'var(--muted)';
-    }
-    container.appendChild(imgWrap);
+  // Add pending badge for unapproved prompts (admin view)
+  if (!prompt.accepted && currentUser.role === 'admin') {
+    const badge = document.createElement('div');
+    badge.className = 'badge pending';
+    badge.textContent = 'Pending';
+    badge.style.position = 'absolute';
+    badge.style.top = '10px';
+    badge.style.left = '10px';
+    badge.style.zIndex = '1';
+    container.appendChild(badge);
+  }
 
-    const h = document.createElement('h4');
-    h.innerHTML = `<span>${escapeHtml(prompt.title)}</span>`;
-    container.appendChild(h);
+  // image container
+  const imgWrap = document.createElement('div');
+  imgWrap.className = 'img';
+  if(prompt.image_url){
+    const img = document.createElement('img');
+    const imageUrl = prompt.image_url.startsWith('http') ? prompt.image_url : BACKEND_BASE + prompt.image_url;
+    img.src = imageUrl;
+    img.alt = prompt.title || 'prompt image';
+    img.onerror = function() {
+      this.style.display = 'none';
+      imgWrap.textContent = 'Image not available';
+      imgWrap.style.display = 'flex';
+      imgWrap.style.alignItems = 'center';
+      imgWrap.style.justifyContent = 'center';
+      imgWrap.style.color = 'var(--muted)';
+    };
+    imgWrap.appendChild(img);
+  } else {
+    imgWrap.textContent = 'No image';
+    imgWrap.style.display = 'flex';
+    imgWrap.style.alignItems = 'center';
+    imgWrap.style.justifyContent = 'center';
+    imgWrap.style.color = 'var(--muted)';
+  }
+  container.appendChild(imgWrap);
 
-    const tag = document.createElement('div');
-    tag.className = 'tagline';
-    tag.textContent = prompt.tagline || `By ${prompt.username} • ${formatDate(prompt.created)}`;
-    container.appendChild(tag);
+  // title
+  const h = document.createElement('h4');
+  h.innerHTML = `<span>${escapeHtml(prompt.title || prompt.text.slice(0,40))}</span>`;
+  container.appendChild(h);
 
-    const pbox = document.createElement('div');
-    pbox.className = 'prompt-box';
-    pbox.textContent = prompt.text;
-    container.appendChild(pbox);
+  // tagline
+  const tag = document.createElement('div');
+  tag.className = 'tagline';
+  tag.textContent = prompt.tagline || `By ${prompt.username || 'Anonymous'} • ${formatDate(prompt.created)}`;
+  container.appendChild(tag);
 
-    const modelInfo = document.createElement('div');
-    modelInfo.className = 'model-info';
-    modelInfo.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span>Works with: ${prompt.model}</span>
-    `;
-    container.appendChild(modelInfo);
+  // prompt box
+  const pbox = document.createElement('div');
+  pbox.className = 'prompt-box';
+  pbox.textContent = prompt.text || '';
+  container.appendChild(pbox);
 
+  // model info
+  const modelInfo = document.createElement('div');
+  modelInfo.className = 'model-info';
+  modelInfo.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>Works with: ${prompt.model || 'Multiple AI Models'}</span>
+  `;
+  container.appendChild(modelInfo);
+
+  // Admin actions
+  if (currentUser.role === 'admin' && !prompt.accepted) {
+    const adminActions = document.createElement('div');
+    adminActions.className = 'admin-actions';
+
+    const approveBtn = document.createElement('button');
+    approveBtn.className = 'btn btn-success';
+    approveBtn.innerHTML = '✓ Approve';
+    approveBtn.onclick = () => approvePrompt(prompt.id);
+
+    const rejectBtn = document.createElement('button');
+    rejectBtn.className = 'btn btn-danger';
+    rejectBtn.innerHTML = '✗ Reject';
+    rejectBtn.onclick = () => rejectPrompt(prompt.id);
+
+    adminActions.appendChild(approveBtn);
+    adminActions.appendChild(rejectBtn);
+    container.appendChild(adminActions);
+  }
+
+  // bottom row (copy button) - only for accepted prompts
+  if (prompt.accepted) {
     const bottom = document.createElement('div');
     bottom.className = 'card-bottom';
 
@@ -1137,194 +1422,407 @@ function makeCardElement(prompt){
     copyBtn.className = 'copy-btn';
     copyBtn.title = 'Copy prompt text';
     copyBtn.innerHTML = `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M9 12H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Copy the Prompt
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 12H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Copy the Prompt
     `;
     bottom.appendChild(copyBtn);
 
     copyBtn.addEventListener('click', async ()=>{
-        try {
-            await navigator.clipboard.writeText(prompt.text);
-            showToast('Prompt copied to clipboard');
-            const originalHTML = copyBtn.innerHTML;
-            copyBtn.innerHTML = `
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                Copied!
-            `;
-            setTimeout(()=> {
-                copyBtn.innerHTML = originalHTML;
-            }, 2000);
-        } catch(e){
-            alert('Copy failed — your browser blocked clipboard access.');
-        }
+      try {
+        await navigator.clipboard.writeText(prompt.text || '');
+        showToast('Prompt copied to clipboard');
+        const originalHTML = copyBtn.innerHTML;
+        copyBtn.innerHTML = `
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Copied!
+        `;
+        setTimeout(()=> { copyBtn.innerHTML = originalHTML; }, 2000);
+      } catch(e){
+        alert('Copy failed — your browser blocked clipboard access.');
+      }
     });
 
     container.appendChild(bottom);
-    return container;
+  }
+
+  return container;
+}
+
+/* ---------- Admin Dashboard Functions ---------- */
+async function loadAdminDashboard() {
+  if (currentUser.role !== 'admin') return;
+  
+  await loadAdminStats();
+  await loadPendingPrompts();
+}
+
+async function loadAdminStats() {
+  try {
+    const stats = await fetchAdminStats();
+    if (stats) {
+      document.getElementById('adminTotalPrompts').textContent = stats.total_prompts;
+      document.getElementById('adminApprovedPrompts').textContent = stats.accepted_prompts;
+      document.getElementById('adminPendingPrompts').textContent = stats.pending_prompts;
+      document.getElementById('adminTrendingPrompts').textContent = stats.trending_prompts;
+      document.getElementById('adminTotalUsers').textContent = stats.total_users;
+    }
+  } catch (e) {
+    console.error('Error loading admin stats:', e);
+  }
+}
+
+async function loadPendingPrompts() {
+  const container = document.getElementById('pendingPromptsList');
+  container.innerHTML = '<div class="muted">Loading pending prompts...</div>';
+  
+  try {
+    const prompts = await fetchPendingPrompts();
+    if (!prompts || prompts.length === 0) {
+      container.innerHTML = '<div class="muted">No pending prompts for review.</div>';
+      return;
+    }
+
+    container.innerHTML = `
+      <div style="margin-bottom: 12px; font-size: 14px; color: var(--muted)">
+        ${prompts.length} prompt(s) awaiting approval
+      </div>
+    `;
+
+    prompts.forEach(prompt => {
+      const item = document.createElement('div');
+      item.className = 'checkbox-item';
+      item.innerHTML = `
+        <input type="checkbox" id="check-${prompt.id}" onchange="togglePromptSelection('${prompt.id}')">
+        <div style="flex: 1;">
+          <div style="font-weight: 600;">${escapeHtml(prompt.title)}</div>
+          <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">
+            By ${prompt.username} • ${formatDate(prompt.created)} • ${prompt.model}
+          </div>
+          <div style="font-size: 13px; margin-top: 8px; color: #555;">
+            ${escapeHtml(prompt.text.length > 150 ? prompt.text.substring(0, 150) + '...' : prompt.text)}
+          </div>
+        </div>
+        <div class="admin-actions">
+          <button class="btn btn-success" onclick="approvePrompt('${prompt.id}')">✓ Approve</button>
+          <button class="btn btn-danger" onclick="rejectPrompt('${prompt.id}')">✗ Reject</button>
+        </div>
+      `;
+      container.appendChild(item);
+    });
+
+  } catch (e) {
+    console.error('Error loading pending prompts:', e);
+    container.innerHTML = '<div class="muted">Error loading pending prompts.</div>';
+  }
+}
+
+function togglePromptSelection(promptId) {
+  const checkbox = document.getElementById(`check-${promptId}`);
+  if (checkbox.checked) {
+    selectedPrompts.add(promptId);
+  } else {
+    selectedPrompts.delete(promptId);
+  }
+  updateBulkActions();
+}
+
+function updateBulkActions() {
+  const bulkActions = document.getElementById('bulkActions');
+  const selectedCount = document.getElementById('selectedCount');
+  
+  if (selectedPrompts.size > 0) {
+    bulkActions.style.display = 'flex';
+    selectedCount.textContent = `${selectedPrompts.size} selected`;
+  } else {
+    bulkActions.style.display = 'none';
+  }
+}
+
+function clearSelection() {
+  selectedPrompts.clear();
+  document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+    checkbox.checked = false;
+  });
+  updateBulkActions();
+}
+
+async function bulkApprovePrompts() {
+  if (selectedPrompts.size === 0) return;
+  
+  try {
+    const res = await fetch(BACKEND_BASE + '/api/admin/prompts/bulk-action', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        prompt_ids: Array.from(selectedPrompts),
+        action: 'approve'
+      })
+    });
+
+    if (res.ok) {
+      const result = await res.json();
+      showToast(`Approved ${result.updated_count} prompts!`);
+      selectedPrompts.clear();
+      updateBulkActions();
+      loadAdminDashboard();
+      loadGallery();
+      loadTrending();
+    } else {
+      alert('Failed to approve prompts');
+    }
+  } catch (e) {
+    console.error('Error bulk approving prompts:', e);
+    alert('Error approving prompts');
+  }
+}
+
+async function bulkRejectPrompts() {
+  if (selectedPrompts.size === 0) return;
+  
+  if (!confirm(`Are you sure you want to reject ${selectedPrompts.size} prompt(s)?`)) return;
+  
+  try {
+    const res = await fetch(BACKEND_BASE + '/api/admin/prompts/bulk-action', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        prompt_ids: Array.from(selectedPrompts),
+        action: 'reject'
+      })
+    });
+
+    if (res.ok) {
+      const result = await res.json();
+      showToast(`Rejected ${result.updated_count} prompts!`);
+      selectedPrompts.clear();
+      updateBulkActions();
+      loadAdminDashboard();
+      loadGallery();
+      loadTrending();
+    } else {
+      alert('Failed to reject prompts');
+    }
+  } catch (e) {
+    console.error('Error bulk rejecting prompts:', e);
+    alert('Error rejecting prompts');
+  }
+}
+
+/* ---------- Admin functions ---------- */
+async function approvePrompt(promptId) {
+  try {
+    const res = await fetch(BACKEND_BASE + `/api/prompts/${promptId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ accepted: true })
+    });
+
+    if (res.ok) {
+      showToast('Prompt approved!');
+      loadAdminDashboard();
+      loadGallery();
+      loadTrending();
+    } else {
+      alert('Failed to approve prompt');
+    }
+  } catch (e) {
+    console.error('Error approving prompt:', e);
+    alert('Error approving prompt');
+  }
+}
+
+async function rejectPrompt(promptId) {
+  if (!confirm('Are you sure you want to reject this prompt?')) return;
+  
+  try {
+    const res = await fetch(BACKEND_BASE + `/api/prompts/${promptId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+
+    if (res.ok) {
+      showToast('Prompt rejected and deleted');
+      loadAdminDashboard();
+      loadGallery();
+      loadTrending();
+    } else {
+      alert('Failed to reject prompt');
+    }
+  } catch (e) {
+    console.error('Error rejecting prompt:', e);
+    alert('Error rejecting prompt');
+  }
 }
 
 /* ---------- Load Trending ---------- */
 async function loadTrending(){
-    const grid = document.getElementById('trendingGrid');
-    grid.innerHTML = '<div class="muted">Loading…</div>';
-    
-    try {
-        const prompts = await getTrendingPrompts();
-        grid.innerHTML = '';
-        
-        const first = prompts.slice(0, 6);
-        first.forEach(p => {
-            grid.appendChild(makeCardElement(p));
-        });
-        
-        updateStats();
-        
-        setTimeout(() => {
-            const cards = grid.querySelectorAll('.fade-in');
-            cards.forEach(card => { card.classList.add('visible'); });
-        }, 80);
-    } catch (error) {
-        grid.innerHTML = '<div class="muted">Failed to load trending prompts</div>';
-    }
+  const grid = document.getElementById('trendingGrid');
+  grid.innerHTML = '<div class="muted">Loading…</div>';
+  const prompts = await getTrendingPrompts();
+  grid.innerHTML = '';
+  
+  if (prompts.length === 0) {
+    grid.innerHTML = '<div class="muted">No trending prompts found. Check backend connection.</div>';
+    return;
+  }
+  
+  const first = prompts.slice(0,6);
+  first.forEach(p=>{
+    grid.appendChild(makeCardElement(p));
+  });
+  updateStats();
+
+  setTimeout(() => {
+    const cards = grid.querySelectorAll('.fade-in');
+    cards.forEach(card => { card.classList.add('visible'); });
+  }, 80);
 }
 
 /* ---------- Load Gallery ---------- */
 async function loadGallery(){
-    const grid = document.getElementById('galleryGrid');
-    grid.innerHTML = '<div class="muted">Loading…</div>';
-    
-    try {
-        const prompts = await getGalleryPrompts();
-        grid.innerHTML = '';
-        
-        prompts.forEach(p => {
-            const el = makeCardElement(p);
-            grid.appendChild(el);
-        });
-        
-        updateStats();
-        
-        setTimeout(() => {
-            const cards = grid.querySelectorAll('.fade-in');
-            cards.forEach(c => c.classList.add('visible'));
-        }, 80);
-    } catch (error) {
-        grid.innerHTML = '<div class="muted">Failed to load gallery prompts</div>';
+  const grid = document.getElementById('galleryGrid');
+  grid.innerHTML = '<div class="muted">Loading…</div>';
+  
+  let prompts;
+  if (currentUser.role === 'admin') {
+    const res = await fetch(BACKEND_BASE + '/api/prompts?public=false', {
+      headers: getAuthHeaders()
+    });
+    if (res.ok) {
+      prompts = await res.json();
+    } else {
+      prompts = await getGalleryPrompts();
     }
+  } else {
+    prompts = await getGalleryPrompts();
+  }
+  
+  grid.innerHTML = '';
+  
+  if (prompts.length === 0) {
+    grid.innerHTML = '<div class="muted">No prompts found. Check backend connection or submit some prompts!</div>';
+    return;
+  }
+  
+  prompts.forEach(p=>{
+    const el = makeCardElement(p);
+    grid.appendChild(el);
+  });
+  
+  setTimeout(()=> {
+    const cards = grid.querySelectorAll('.fade-in');
+    cards.forEach(c=> c.classList.add('visible'));
+  },80);
+  updateStats();
 }
 
 /* ---------- My prompts ---------- */
 async function loadMyPrompts(){
-    const list = document.getElementById('myPromptsList');
-    
-    if (!currentUser.username) {
-        list.innerHTML = '<div class="muted">Login to see your prompts here.</div>';
-        return;
-    }
-    
-    try {
-        const prompts = await getUserPrompts();
-        
-        if (prompts.length === 0) {
-            list.innerHTML = '<div class="muted">You have no prompts yet.</div>';
-        } else {
-            list.innerHTML = prompts.map(p => `
-                <div style="margin-bottom:10px;padding:12px;border-radius:10px;background:#fff7f2">
-                    <strong>${escapeHtml(p.title)}</strong>
-                    <div style="font-size:12px;color:${p.status === 'approved' ? 'green' : p.status === 'rejected' ? 'red' : 'orange'}; margin-top:4px">
-                        Status: ${p.status.toUpperCase()}
-                    </div>
-                    <div class="muted" style="font-size:12px; margin-top:4px">${formatDate(p.created)}</div>
-                    ${currentUser.role === 'admin' ? `
-                        <div style="margin-top:8px">
-                            <button onclick="approvePrompt(${p.id})" style="background:green;color:white;border:none;padding:4px 8px;border-radius:4px;margin-right:4px;font-size:12px">Approve</button>
-                            <button onclick="rejectPrompt(${p.id})" style="background:red;color:white;border:none;padding:4px 8px;border-radius:4px;font-size:12px">Reject</button>
-                            <button onclick="toggleTrending(${p.id}, ${!p.is_trending})" style="background:${p.is_trending ? 'orange' : 'blue'};color:white;border:none;padding:4px 8px;border-radius:4px;margin-left:4px;font-size:12px">
-                                ${p.is_trending ? 'Remove Trending' : 'Make Trending'}
-                            </button>
-                        </div>
-                    ` : ''}
-                </div>
-            `).join('');
-        }
-    } catch (error) {
-        list.innerHTML = '<div class="muted">Failed to load your prompts</div>';
-    }
+  const list = document.getElementById('myPromptsList');
+  const prompts = await getMyPrompts();
+  
+  if(!currentUser || !currentUser.username) { 
+    list.innerHTML = '<div class="muted">Login to see your prompts here.</div>'; 
+    return; 
+  }
+  
+  if(prompts.length === 0) {
+    list.innerHTML = '<div class="muted">You have no prompts yet. Submit your first prompt above!</div>';
+  } else {
+    list.innerHTML = prompts.map(p=> `
+      <div style="margin-bottom:10px;padding:12px;border-radius:10px;background:#${p.accepted ? 'f0f9ff' : 'fff7ed'}; border-left: 4px solid ${p.accepted ? '#3b82f6' : '#f59e0b'}">
+        <div style="font-weight:600">${escapeHtml(p.title || p.text.slice(0,140))}</div>
+        <div class="muted" style="font-size:12px; margin-top:4px">
+          ${formatDate(p.created)} • 
+          <strong style="color:${p.accepted ? '#10b981' : '#f59e0b'}">
+            ${p.accepted ? 'Approved' : 'Pending Approval'}
+          </strong>
+        </div>
+      </div>
+    `).join('');
+  }
 }
 
 /* ---------- Update stats ---------- */
 async function updateStats(){
-    try {
-        const galleryPrompts = await getGalleryPrompts();
-        document.getElementById('statPrompts').textContent = galleryPrompts.length;
-        
-        const users = new Set(galleryPrompts.map(p => p.username));
-        document.getElementById('statUsers').textContent = users.size;
-    } catch (error) {
-        console.error('Failed to update stats:', error);
+  try {
+    const stats = await fetchStatsFromBackend();
+    if (stats) {
+      document.getElementById('statPrompts').textContent = stats.total_prompts;
+      document.getElementById('statUsers').textContent = stats.total_users;
+      document.getElementById('statCats').textContent = '12+';
+    } else {
+      const prompts = await getGalleryPrompts();
+      const users = new Set(prompts.map(p => p.username));
+      document.getElementById('statPrompts').textContent = prompts.length;
+      document.getElementById('statUsers').textContent = users.size;
+      document.getElementById('statCats').textContent = '12+';
     }
+  } catch (e) {
+    console.error('Error updating stats:', e);
+    document.getElementById('statPrompts').textContent = '0';
+    document.getElementById('statUsers').textContent = '0';
+    document.getElementById('statCats').textContent = '12+';
+  }
 }
 
 /* ---------- Submission handlers ---------- */
 document.getElementById('fimage').addEventListener('change', (e)=>{
-    const file = e.target.files[0];
-    const preview = document.getElementById('fpreview');
-    preview.innerHTML = '';
-    if(!file) return;
-    const url = URL.createObjectURL(file);
-    const img = document.createElement('img'); 
-    img.src = url; 
-    img.style.maxWidth='100%'; 
-    img.style.borderRadius='8px';
-    preview.appendChild(img);
+  const file = e.target.files[0];
+  const preview = document.getElementById('fpreview');
+  preview.innerHTML = '';
+  if(!file) return;
+  const url = URL.createObjectURL(file);
+  const img = document.createElement('img'); 
+  img.src = url; 
+  img.style.maxWidth='100%'; 
+  img.style.borderRadius='8px';
+  img.style.maxHeight = '200px';
+  preview.appendChild(img);
 });
 
 document.getElementById('submitBtn').addEventListener('click', async ()=>{
-    const username = document.getElementById('fusername').value.trim();
-    const title = document.getElementById('ftitle').value.trim();
-    const tagline = document.getElementById('ftagline').value.trim();
-    const model = document.getElementById('fmodel').value;
-    const text = document.getElementById('ftext').value.trim();
-    const file = document.getElementById('fimage').files[0];
+  const username = document.getElementById('fusername').value.trim();
+  const title = document.getElementById('ftitle').value.trim();
+  const tagline = document.getElementById('ftagline').value.trim();
+  const model = document.getElementById('fmodel').value;
+  const text = document.getElementById('ftext').value.trim();
+  const file = document.getElementById('fimage').files[0];
+  
+  if(!username || !title || !tagline || !model || !text) {
+    return alert('Please fill all required fields: Username, Title, Tagline, Model, and Prompt Text');
+  }
+
+  const submitUsername = currentUser.username || username;
+
+  const formData = new FormData();
+  formData.append('username', submitUsername);
+  formData.append('title', title);
+  formData.append('tagline', tagline);
+  formData.append('model', model);
+  formData.append('text', text);
+  if(file) formData.append('image', file);
+
+  try {
+    const res = await fetch(BACKEND_BASE + '/api/prompts', {
+      method: 'POST',
+      headers: getAuthHeadersFormData(),
+      body: formData
+    });
     
-    if(!username || !title || !tagline || !model || !text) {
-        return alert('Please fill all required fields: Username, Title, Tagline, Model, and Prompt Text');
+    if(!res.ok) {
+      const errorData = await res.json().catch(() => ({ error: 'Submission failed' }));
+      return alert('Submission failed: ' + (errorData.error || res.status));
     }
-
-    const formData = new FormData();
-    formData.append('username', username);
-    formData.append('title', title);
-    formData.append('tagline', tagline);
-    formData.append('model', model);
-    formData.append('text', text);
-    if (file) {
-        formData.append('image', file);
-    }
-
-    try {
-        const newPrompt = await apiFormRequest('/prompts/create/', formData);
-        alert('Prompt submitted successfully! It will appear in the gallery after admin approval.');
-        
-        document.getElementById('fusername').value = '';
-        document.getElementById('ftitle').value = '';
-        document.getElementById('ftagline').value = '';
-        document.getElementById('fmodel').value = '';
-        document.getElementById('ftext').value = '';
-        document.getElementById('fimage').value = '';
-        document.getElementById('fpreview').innerHTML = '';
-        
-        loadMyPrompts();
-    } catch (error) {
-        alert(`Submission failed: ${error.message}`);
-    }
-});
-
-document.getElementById('clearBtn').addEventListener('click', ()=>{
+    
+    const newPrompt = await res.json();
+    showToast('Prompt submitted successfully! Waiting for admin approval.');
+    
     document.getElementById('fusername').value = '';
     document.getElementById('ftitle').value = '';
     document.getElementById('ftagline').value = '';
@@ -1332,182 +1830,59 @@ document.getElementById('clearBtn').addEventListener('click', ()=>{
     document.getElementById('ftext').value = '';
     document.getElementById('fimage').value = '';
     document.getElementById('fpreview').innerHTML = '';
+    
+    loadGallery();
+    loadTrending();
+    loadMyPrompts();
+    
+  } catch(e) {
+    console.error('Submission error:', e);
+    alert('Submission error. Please check if the backend server is running.');
+  }
 });
 
-/* ---------- Admin Functions ---------- */
-async function approvePrompt(promptId) {
-    try {
-        await apiRequest(`/prompts/${promptId}/status/`, {
-            method: 'PUT',
-            body: JSON.stringify({ status: 'approved' }),
-        });
-        alert('Prompt approved!');
-        loadGallery();
-        loadTrending();
-        loadMyPrompts();
-    } catch (error) {
-        alert(`Failed to approve prompt: ${error.message}`);
-    }
-}
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  document.getElementById('fusername').value = '';
+  document.getElementById('ftitle').value = '';
+  document.getElementById('ftagline').value = '';
+  document.getElementById('fmodel').value = '';
+  document.getElementById('ftext').value = '';
+  document.getElementById('fimage').value = '';
+  document.getElementById('fpreview').innerHTML = '';
+});
 
-async function rejectPrompt(promptId) {
-    try {
-        await apiRequest(`/prompts/${promptId}/status/`, {
-            method: 'PUT',
-            body: JSON.stringify({ status: 'rejected' }),
-        });
-        alert('Prompt rejected!');
-        loadMyPrompts();
-    } catch (error) {
-        alert(`Failed to reject prompt: ${error.message}`);
-    }
-}
-
-async function toggleTrending(promptId, isTrending) {
-    try {
-        await apiRequest(`/prompts/${promptId}/status/`, {
-            method: 'PUT',
-            body: JSON.stringify({ is_trending: isTrending }),
-        });
-        alert(`Prompt ${isTrending ? 'added to' : 'removed from'} trending!`);
-        loadGallery();
-        loadTrending();
-        loadMyPrompts();
-    } catch (error) {
-        alert(`Failed to update trending status: ${error.message}`);
-    }
-}
-
-/* ---------- Modal Functions ---------- */
-function openLogin(){ 
-    document.getElementById('modal').style.display='flex'; 
-}
-
-function closeLogin(){ 
-    document.getElementById('modal').style.display='none'; 
-}
-
-function openRegister(){ 
-    document.getElementById('registerModal').style.display='flex'; 
-}
-
-function closeRegister(){ 
-    document.getElementById('registerModal').style.display='none'; 
-}
-
-function openRegisterMobile() {
-    openRegister();
-    toggleMobileNav();
-}
-
-function updateAuthUI(){
-    const navLogin = document.getElementById('navLogin');
-    const mobileNavLogin = document.getElementById('mobileNavLogin');
-    const navRegister = document.getElementById('navRegister');
-    const mobileNavRegister = document.getElementById('mobileNavRegister');
-
-    if (currentUser && currentUser.username) {
-        navLogin.textContent = 'Logout (' + currentUser.username + ')';
-        navLogin.onclick = () => { if(confirm('Logout?')) { logout(); } };
-        mobileNavLogin.textContent = 'Logout (' + currentUser.username + ')';
-        mobileNavLogin.onclick = () => { if(confirm('Logout?')) { logout(); } };
-        
-        navRegister.style.display = 'none';
-        mobileNavRegister.style.display = 'none';
-    } else {
-        navLogin.textContent = 'Login';
-        navLogin.onclick = () => openLogin();
-        mobileNavLogin.textContent = 'Login';
-        mobileNavLogin.onclick = () => openLoginMobile();
-        
-        navRegister.style.display = 'block';
-        mobileNavRegister.style.display = 'block';
-    }
-}
-
-/* ---------- Navigation Functions ---------- */
-function toggleMobileNav() {
-    const mobileNav = document.getElementById('mobileNav');
-    mobileNav.classList.toggle('active');
-    document.body.style.overflow = mobileNav.classList.contains('active') ? 'hidden' : 'auto';
-}
-
-function navToMobile(page) {
-    navTo(page);
-    toggleMobileNav();
-}
-
-function openModalPageMobile(page) {
-    openModalPage(page);
-    toggleMobileNav();
-}
-
-function openLoginMobile() {
-    openLogin();
-    toggleMobileNav();
-}
-
-function navTo(page){
-    const pages = ['home','gallery','my'];
-    pages.forEach(p=>{
-        const pageEl = document.getElementById('page'+capitalize(p));
-        if(pageEl) pageEl.classList.remove('active');
-        const nav = document.getElementById('nav'+capitalize(p));
-        if(nav) nav.classList.remove('active');
-        const mnav = document.getElementById('mobileNav'+capitalize(p));
-        if(mnav) mnav.classList.remove('active');
-    });
-    
-    const navId = (page === 'home') ? 'navHome' : (page === 'gallery' ? 'navGallery' : 'navMy');
-    const navItem = document.getElementById(navId);
-    if(navItem) navItem.classList.add('active');
-    const mobileItem = document.getElementById('mobileNav'+capitalize(page));
-    if(mobileItem) mobileItem.classList.add('active');
-
-    if(page === 'gallery') loadGallery();
-    if(page === 'home') loadTrending();
-    if(page === 'my') loadMyPrompts();
-
-    window.scrollTo({top: 0, behavior: 'smooth'});
-}
-
-function openModalPage(page) {
-    const el = document.getElementById('modal' + capitalize(page));
-    if(!el) return;
-    el.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    if(page === 'gallery') loadGallery();
-    else if(page === 'my') loadMyPrompts();
-}
-
-function closeModalPage(page) {
-    const el = document.getElementById('modal' + capitalize(page));
-    if(!el) return;
-    el.classList.remove('active');
-    document.body.style.overflow = 'auto';
-}
-
-function capitalize(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
-
-/* ---------- Toast (copy success) ---------- */
+/* ---------- Toast ---------- */
 let toastTimer = null;
 function showToast(msg){
-    const toast = document.getElementById('toast');
-    const ttext = document.getElementById('toastText');
-    ttext.textContent = msg || 'Copied to clipboard';
-    toast.classList.add('show');
-    toast.style.display = 'flex';
-    if(toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(()=>{
-        toast.classList.remove('show');
-        setTimeout(()=>{ toast.style.display = 'none'; }, 280);
-    }, 1700);
+  const toast = document.getElementById('toast');
+  const ttext = document.getElementById('toastText');
+  ttext.textContent = msg || 'Copied to clipboard';
+  toast.classList.add('show');
+  toast.style.display = 'flex';
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{
+    toast.classList.remove('show');
+    setTimeout(()=>{ toast.style.display = 'none'; }, 280);
+  }, 3000);
+}
+
+/* ---------- Auto-fill username if logged in ---------- */
+function updateSubmitForm() {
+  if (currentUser && currentUser.username) {
+    document.getElementById('fusername').value = currentUser.username;
+    document.getElementById('fusername').readOnly = true;
+    document.getElementById('fusername').style.background = '#f8f9fa';
+  } else {
+    document.getElementById('fusername').readOnly = false;
+    document.getElementById('fusername').style.background = 'transparent';
+  }
 }
 
 /* ---------- init ---------- */
 (async function init(){
-    await loadTrending();
-    navTo('home');
+  updateSubmitForm();
+  await loadTrending();
+  navTo('home');
 })();
 </script>
 
