@@ -1911,13 +1911,18 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
     
     if(!res.ok) {
       const errorData = await res.json().catch(() => ({ error: 'Submission failed' }));
-      return alert('Submission failed: ' + (errorData.error || res.status));
+      const errorMessage = errorData.error || `Submission failed with status: ${res.status}`;
+      console.error('Submission error:', errorData);
+      return alert('Submission failed: ' + errorMessage);
     }
     
     const newPrompt = await res.json();
     showToast('Prompt submitted successfully! Waiting for admin approval.');
     
-    document.getElementById('fusername').value = '';
+    // Clear form but keep username if user is logged in
+    if (!currentUser.username) {
+      document.getElementById('fusername').value = '';
+    }
     document.getElementById('ftitle').value = '';
     document.getElementById('ftagline').value = '';
     document.getElementById('fmodel').value = '';
@@ -1936,7 +1941,10 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
 });
 
 document.getElementById('clearBtn').addEventListener('click', ()=>{
-  document.getElementById('fusername').value = '';
+  // Don't clear username if user is logged in
+  if (!currentUser.username) {
+    document.getElementById('fusername').value = '';
+  }
   document.getElementById('ftitle').value = '';
   document.getElementById('ftagline').value = '';
   document.getElementById('fmodel').value = '';
