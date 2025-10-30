@@ -645,6 +645,63 @@
       pointer-events: auto; 
     }
 
+    /* File Upload Styles */
+    .file-upload-area {
+      border: 2px dashed #ddd;
+      border-radius: 12px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: #fafafa;
+      margin-top: 8px;
+    }
+    .file-upload-area:hover {
+      border-color: var(--accent);
+      background: #fff9f7;
+    }
+    .file-upload-area.dragover {
+      border-color: var(--accent);
+      background: #fff0ec;
+    }
+    .file-upload-icon {
+      font-size: 48px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .file-upload-text {
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .file-upload-hint {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .upload-preview {
+      margin-top: 12px;
+      text-align: center;
+    }
+    .upload-preview img {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+    .upload-progress {
+      width: 100%;
+      height: 6px;
+      background: #f0f0f0;
+      border-radius: 3px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+    .upload-progress-bar {
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
     /* Animations */
     @keyframes fadeInUp {
       from {
@@ -720,6 +777,9 @@
       .bulk-actions {
         flex-direction: column;
         align-items: stretch;
+      }
+      .file-upload-area {
+        padding: 20px;
       }
     }
 
@@ -870,7 +930,7 @@
         <div style="flex:1;min-width:320px">
           <div class="panel">
             <h4 style="font-family:'Space Grotesk',sans-serif;margin:0 0 6px">Submit Prompt</h4>
-            <div class="muted">Enter prompt details and sample image URL. Images should be hosted elsewhere (Imgur, etc.)</div>
+            <div class="muted">Enter prompt details and upload an image or provide a URL</div>
 
             <label>Username *</label>
             <input id="fusername" type="text" placeholder="Your name" />
@@ -897,7 +957,21 @@
             <label>Prompt Text *</label>
             <textarea id="ftext" placeholder="Describe the prompt (style, mood, lens, color grading, etc.)"></textarea>
 
-            <label>Image URL (optional)</label>
+            <label>Upload Image</label>
+            <div class="file-upload-area" id="fileUploadArea">
+              <div class="file-upload-icon">📁</div>
+              <div class="file-upload-text">Click to upload or drag and drop</div>
+              <div class="file-upload-hint">PNG, JPG, GIF up to 5MB</div>
+              <input type="file" id="fileInput" accept="image/*" style="display: none" />
+            </div>
+            <div class="upload-preview" id="uploadPreview"></div>
+            <div class="upload-progress" id="uploadProgress" style="display: none">
+              <div class="upload-progress-bar" id="uploadProgressBar"></div>
+            </div>
+
+            <div style="margin: 12px 0; text-align: center; color: var(--muted); font-size: 14px;">OR</div>
+
+            <label>Image URL (alternative)</label>
             <input id="fimage" type="text" placeholder="https://example.com/image.jpg" />
             <div id="fpreview" style="margin-top:10px"></div>
 
@@ -910,7 +984,6 @@
               </button>
               <button id="clearBtn" class="btn btn-ghost">Clear</button>
             </div>
-            <div class="muted" style="margin-top:10px">Note: For images, upload to a service like Imgur first and paste the URL here.</div>
           </div>
         </div>
 
@@ -1044,12 +1117,13 @@
 <script>
 /* ---------- CONFIG ---------- */
 // Update this with your Vercel backend URL after deployment
-const BACKEND_BASE = 'promptzentesterjs-backend-cm1c.vercel.app';
+const BACKEND_BASE = 'https://your-backend-url.vercel.app';
 /* ---------------------------- */
 
 let currentUser = { username:null, role:'user' };
 let authToken = localStorage.getItem('promptzen_token');
 let selectedPrompts = new Set();
+let uploadedImageUrl = null;
 
 // Local storage keys
 const STORAGE_KEYS = {
@@ -1127,19 +1201,23 @@ function initializeLocalStorage() {
   if (!existingUsers || Object.keys(existingUsers).length === 0) {
     const defaultUsers = {
       'admin': {
-        password: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', // admin123
+        // Password: admin123
+        password: '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9',
         role: 'admin'
       },
       'Ellen': {
-        password: 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', // password123
+        // Password: password123
+        password: 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f',
         role: 'user'
       },
       'Madelyn': {
-        password: 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', // password123
+        // Password: password123
+        password: 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f',
         role: 'user'
       },
       'CodeRonins': {
-        password: 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', // password123
+        // Password: password123
+        password: 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f',
         role: 'user'
       }
     };
@@ -1167,10 +1245,25 @@ function getAuthHeaders() {
   return headers;
 }
 
-// Simple SHA256 hash for passwords
-function hashPassword(password) {
-  // Simple hash for demo - in production use proper bcrypt
-  return crypto.subtle ? 'hashed_' + password : password;
+// SHA256 hash for passwords
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+// Simple hash for fallback (less secure but works without crypto.subtle)
+function simpleHash(password) {
+  let hash = 0;
+  for (let i = 0; i < password.length; i++) {
+    const char = password.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(16);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1298,59 +1391,12 @@ async function doRegister(){
       loadGallery();
       loadMyPrompts();
     } else {
-      // Fallback to localStorage
-      const users = getLocalStorage(STORAGE_KEYS.USERS, {});
-      if (users[u]) {
-        alert('Username already exists');
-        return;
-      }
-      
-      // Create user in localStorage
-      users[u] = {
-        password: hashPassword(p),
-        role: 'user'
-      };
-      setLocalStorage(STORAGE_KEYS.USERS, users);
-      
-      currentUser = { username: u, role: 'user' };
-      setAuthToken('local_token_' + Date.now());
-      setLocalStorage(STORAGE_KEYS.CURRENT_USER, currentUser);
-      
-      showToast('Registration successful (local mode)!');
-      closeLogin();
-      updateAuthUI();
-      updateSubmitForm();
-      loadTrending();
-      loadGallery();
-      loadMyPrompts();
+      const errorData = await res.json();
+      alert(errorData.error || 'Registration failed');
     }
   } catch(e) {
-    console.error('Backend registration failed, using localStorage fallback:', e);
-    
-    // Fallback to localStorage
-    const users = getLocalStorage(STORAGE_KEYS.USERS, {});
-    if (users[u]) {
-      alert('Username already exists');
-      return;
-    }
-    
-    users[u] = {
-      password: hashPassword(p),
-      role: 'user'
-    };
-    setLocalStorage(STORAGE_KEYS.USERS, users);
-    
-    currentUser = { username: u, role: 'user' };
-    setAuthToken('local_token_' + Date.now());
-    setLocalStorage(STORAGE_KEYS.CURRENT_USER, currentUser);
-    
-    showToast('Registration successful (local mode)!');
-    closeLogin();
-    updateAuthUI();
-    updateSubmitForm();
-    loadTrending();
-    loadGallery();
-    loadMyPrompts();
+    console.error('Backend registration failed:', e);
+    alert('Registration failed. Please try again.');
   }
 }
 
@@ -1379,44 +1425,38 @@ async function doLogin(){
       loadGallery();
       loadMyPrompts();
     } else {
-      // Fallback to localStorage
-      const users = getLocalStorage(STORAGE_KEYS.USERS, {});
-      const user = users[u];
-      
-      if (user && user.password === hashPassword(p)) {
-        currentUser = { username: u, role: user.role };
-        setAuthToken('local_token_' + Date.now());
-        setLocalStorage(STORAGE_KEYS.CURRENT_USER, currentUser);
-        showToast('Login successful (local mode)!');
-        closeLogin();
-        updateAuthUI();
-        updateSubmitForm();
-        loadTrending();
-        loadGallery();
-        loadMyPrompts();
-      } else {
-        alert('Invalid credentials');
-      }
+      const errorData = await res.json();
+      alert(errorData.error || 'Login failed');
     }
   } catch(e) {
-    console.error('Backend login failed, using localStorage fallback:', e);
+    console.error('Backend login failed:', e);
     
-    // Fallback to localStorage
+    // Fallback to localStorage for demo
     const users = getLocalStorage(STORAGE_KEYS.USERS, {});
-    const user = users[u];
+    let userFound = false;
     
-    if (user && user.password === hashPassword(p)) {
-      currentUser = { username: u, role: user.role };
-      setAuthToken('local_token_' + Date.now());
-      setLocalStorage(STORAGE_KEYS.CURRENT_USER, currentUser);
-      showToast('Login successful (local mode)!');
-      closeLogin();
-      updateAuthUI();
-      updateSubmitForm();
-      loadTrending();
-      loadGallery();
-      loadMyPrompts();
-    } else {
+    for (const [username, userData] of Object.entries(users)) {
+      if (username === u) {
+        // For demo purposes, use simple hash comparison
+        const hashedInput = simpleHash(p);
+        if (userData.password === hashedInput || userData.password === await hashPassword(p)) {
+          currentUser = { username: u, role: userData.role };
+          setAuthToken('demo_token_' + Date.now());
+          setLocalStorage(STORAGE_KEYS.CURRENT_USER, currentUser);
+          showToast('Login successful! (Demo mode)');
+          closeLogin();
+          updateAuthUI();
+          updateSubmitForm();
+          loadTrending();
+          loadGallery();
+          loadMyPrompts();
+          userFound = true;
+          break;
+        }
+      }
+    }
+    
+    if (!userFound) {
       alert('Invalid credentials');
     }
   }
@@ -1464,6 +1504,166 @@ function logout(){
   loadMyPrompts();
 }
 
+/* ---------- File Upload Functions ---------- */
+function initializeFileUpload() {
+  const fileInput = document.getElementById('fileInput');
+  const fileUploadArea = document.getElementById('fileUploadArea');
+  const uploadPreview = document.getElementById('uploadPreview');
+  const uploadProgress = document.getElementById('uploadProgress');
+  const uploadProgressBar = document.getElementById('uploadProgressBar');
+  const urlInput = document.getElementById('fimage');
+
+  // Click handler
+  fileUploadArea.addEventListener('click', () => {
+    fileInput.click();
+  });
+
+  // Drag and drop handlers
+  fileUploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    fileUploadArea.classList.add('dragover');
+  });
+
+  fileUploadArea.addEventListener('dragleave', () => {
+    fileUploadArea.classList.remove('dragover');
+  });
+
+  fileUploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    fileUploadArea.classList.remove('dragover');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      handleFileSelect(files[0]);
+    }
+  });
+
+  // File input change handler
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      handleFileSelect(e.target.files[0]);
+    }
+  });
+
+  // URL input change handler - clear file upload if URL is entered
+  urlInput.addEventListener('input', () => {
+    if (urlInput.value.trim()) {
+      resetFileUpload();
+    }
+  });
+
+  async function handleFileSelect(file) {
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file (PNG, JPG, GIF, etc.)');
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB');
+      return;
+    }
+
+    // Clear URL input when file is selected
+    urlInput.value = '';
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      uploadPreview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+    };
+    reader.readAsDataURL(file);
+
+    // Upload file
+    await uploadFile(file);
+  }
+
+  async function uploadFile(file) {
+    if (!currentUser || !currentUser.username) {
+      alert('Please login to upload files');
+      resetFileUpload();
+      return;
+    }
+
+    try {
+      uploadProgress.style.display = 'block';
+      uploadProgressBar.style.width = '0%';
+
+      // Simulate progress
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        progress += Math.random() * 10;
+        if (progress > 90) {
+          clearInterval(progressInterval);
+        }
+        uploadProgressBar.style.width = `${progress}%`;
+      }, 100);
+
+      // Read file as base64
+      const base64 = await fileToBase64(file);
+
+      // Upload to backend
+      const res = await fetch(BACKEND_BASE + '/api/upload', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          file: base64,
+          filename: file.name,
+          filetype: file.type
+        })
+      });
+
+      clearInterval(progressInterval);
+      uploadProgressBar.style.width = '100%';
+
+      if (res.ok) {
+        const data = await res.json();
+        uploadedImageUrl = data.url;
+        showToast('Image uploaded successfully!');
+        
+        // Update preview with the actual uploaded image
+        uploadPreview.innerHTML = `<img src="${data.url}" alt="Uploaded preview">`;
+        
+        setTimeout(() => {
+          uploadProgress.style.display = 'none';
+        }, 1000);
+      } else {
+        const errorData = await res.json().catch(() => ({ error: 'Upload failed' }));
+        throw new Error(errorData.error || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      uploadProgress.style.display = 'none';
+      alert('File upload failed: ' + error.message);
+      resetFileUpload();
+    }
+  }
+
+  function resetFileUpload() {
+    fileInput.value = '';
+    uploadPreview.innerHTML = '';
+    uploadProgress.style.display = 'none';
+    uploadedImageUrl = null;
+  }
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
+  }
+
+  return { resetFileUpload };
+}
+
+// Initialize file upload when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  initializeFileUpload();
+});
+
 /* ---------- Load stored user ---------- */
 (function(){
   initializeLocalStorage();
@@ -1476,18 +1676,15 @@ function logout(){
   updateAuthUI();
 })();
 
-/* ---------- Backend fetch functions with localStorage fallback ---------- */
+/* ---------- Backend fetch functions ---------- */
 async function fetchPromptsFromBackend(publicOnly = true) {
   try {
     const url = publicOnly ? '/api/prompts?public=true' : '/api/prompts';
     const res = await fetch(BACKEND_BASE + url);
     if (!res.ok) throw new Error('Fetch prompts failed');
-    const data = await res.json();
-    // Sync with localStorage
-    setLocalStorage(STORAGE_KEYS.PROMPTS, data);
-    return data;
+    return await res.json();
   } catch (e) {
-    console.warn('Backend fetch failed, using localStorage:', e);
+    console.warn('Backend fetch failed:', e);
     return getLocalStorage(STORAGE_KEYS.PROMPTS, []);
   }
 }
@@ -1500,7 +1697,7 @@ async function fetchPendingPrompts() {
     if (!res.ok) throw new Error('Fetch pending prompts failed');
     return await res.json();
   } catch (e) {
-    console.warn('Backend pending prompts fetch failed, using localStorage:', e);
+    console.warn('Backend pending prompts fetch failed:', e);
     const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
     return prompts.filter(p => !p.accepted);
   }
@@ -1514,7 +1711,7 @@ async function fetchAdminStats() {
     if (!res.ok) throw new Error('Fetch admin stats failed');
     return await res.json();
   } catch (e) {
-    console.warn('Backend admin stats fetch failed, using localStorage:', e);
+    console.warn('Backend admin stats fetch failed:', e);
     const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
     const totalPrompts = prompts.length;
     const acceptedPrompts = prompts.filter(p => p.accepted).length;
@@ -1538,7 +1735,7 @@ async function fetchStatsFromBackend() {
     if (!res.ok) throw new Error('Fetch stats failed');
     return await res.json();
   } catch (e) {
-    console.warn('Backend stats fetch failed, using localStorage:', e);
+    console.warn('Backend stats fetch failed:', e);
     const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
     const acceptedPrompts = prompts.filter(p => p.accepted);
     const uniqueUsers = new Set(acceptedPrompts.map(p => p.username));
@@ -1586,7 +1783,7 @@ async function getMyPrompts() {
     const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
     return prompts.filter(p => p.username === currentUser.username);
   } catch (e) {
-    console.error('Error fetching my prompts, using localStorage:', e);
+    console.error('Error fetching my prompts:', e);
     const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
     return prompts.filter(p => p.username === currentUser.username);
   }
@@ -1866,45 +2063,11 @@ async function bulkApprovePrompts() {
       loadGallery();
       loadTrending();
     } else {
-      // Fallback to localStorage
-      const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-      let updatedCount = 0;
-      
-      prompts.forEach(prompt => {
-        if (selectedPrompts.has(prompt.id)) {
-          prompt.accepted = true;
-          updatedCount++;
-        }
-      });
-      
-      setLocalStorage(STORAGE_KEYS.PROMPTS, prompts);
-      showToast(`Approved ${updatedCount} prompts! (local mode)`);
-      selectedPrompts.clear();
-      updateBulkActions();
-      loadAdminDashboard();
-      loadGallery();
-      loadTrending();
+      throw new Error('Bulk approve failed');
     }
   } catch (e) {
-    console.error('Error bulk approving prompts, using localStorage:', e);
-    // Fallback to localStorage
-    const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-    let updatedCount = 0;
-    
-    prompts.forEach(prompt => {
-      if (selectedPrompts.has(prompt.id)) {
-        prompt.accepted = true;
-        updatedCount++;
-      }
-    });
-    
-    setLocalStorage(STORAGE_KEYS.PROMPTS, prompts);
-    showToast(`Approved ${updatedCount} prompts! (local mode)`);
-    selectedPrompts.clear();
-    updateBulkActions();
-    loadAdminDashboard();
-    loadGallery();
-    loadTrending();
+    console.error('Error bulk approving prompts:', e);
+    alert('Failed to approve prompts. Please try again.');
   }
 }
 
@@ -1932,31 +2095,11 @@ async function bulkRejectPrompts() {
       loadGallery();
       loadTrending();
     } else {
-      // Fallback to localStorage
-      const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-      const updatedPrompts = prompts.filter(prompt => !selectedPrompts.has(prompt.id));
-      
-      setLocalStorage(STORAGE_KEYS.PROMPTS, updatedPrompts);
-      showToast(`Rejected ${selectedPrompts.size} prompts! (local mode)`);
-      selectedPrompts.clear();
-      updateBulkActions();
-      loadAdminDashboard();
-      loadGallery();
-      loadTrending();
+      throw new Error('Bulk reject failed');
     }
   } catch (e) {
-    console.error('Error bulk rejecting prompts, using localStorage:', e);
-    // Fallback to localStorage
-    const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-    const updatedPrompts = prompts.filter(prompt => !selectedPrompts.has(prompt.id));
-    
-    setLocalStorage(STORAGE_KEYS.PROMPTS, updatedPrompts);
-    showToast(`Rejected ${selectedPrompts.size} prompts! (local mode)`);
-    selectedPrompts.clear();
-    updateBulkActions();
-    loadAdminDashboard();
-    loadGallery();
-    loadTrending();
+    console.error('Error bulk rejecting prompts:', e);
+    alert('Failed to reject prompts. Please try again.');
   }
 }
 
@@ -1975,35 +2118,11 @@ async function approvePrompt(promptId) {
       loadGallery();
       loadTrending();
     } else {
-      // Fallback to localStorage
-      const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-      const prompt = prompts.find(p => p.id === promptId);
-      if (prompt) {
-        prompt.accepted = true;
-        setLocalStorage(STORAGE_KEYS.PROMPTS, prompts);
-        showToast('Prompt approved! (local mode)');
-        loadAdminDashboard();
-        loadGallery();
-        loadTrending();
-      } else {
-        alert('Prompt not found');
-      }
+      throw new Error('Approve failed');
     }
   } catch (e) {
-    console.error('Error approving prompt, using localStorage:', e);
-    // Fallback to localStorage
-    const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-    const prompt = prompts.find(p => p.id === promptId);
-    if (prompt) {
-      prompt.accepted = true;
-      setLocalStorage(STORAGE_KEYS.PROMPTS, prompts);
-      showToast('Prompt approved! (local mode)');
-      loadAdminDashboard();
-      loadGallery();
-      loadTrending();
-    } else {
-      alert('Prompt not found');
-    }
+    console.error('Error approving prompt:', e);
+    alert('Failed to approve prompt. Please try again.');
   }
 }
 
@@ -2022,25 +2141,11 @@ async function rejectPrompt(promptId) {
       loadGallery();
       loadTrending();
     } else {
-      // Fallback to localStorage
-      const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-      const updatedPrompts = prompts.filter(p => p.id !== promptId);
-      setLocalStorage(STORAGE_KEYS.PROMPTS, updatedPrompts);
-      showToast('Prompt rejected and deleted (local mode)');
-      loadAdminDashboard();
-      loadGallery();
-      loadTrending();
+      throw new Error('Reject failed');
     }
   } catch (e) {
-    console.error('Error rejecting prompt, using localStorage:', e);
-    // Fallback to localStorage
-    const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-    const updatedPrompts = prompts.filter(p => p.id !== promptId);
-    setLocalStorage(STORAGE_KEYS.PROMPTS, updatedPrompts);
-    showToast('Prompt rejected and deleted (local mode)');
-    loadAdminDashboard();
-    loadGallery();
-    loadTrending();
+    console.error('Error rejecting prompt:', e);
+    alert('Failed to reject prompt. Please try again.');
   }
 }
 
@@ -2189,13 +2294,16 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
   // If user is logged in, use their username from account
   const submitUsername = currentUser.username || username;
 
+  // Use uploaded image URL if available, otherwise use the URL input
+  const finalImageUrl = uploadedImageUrl || image_url || null;
+
   const promptData = {
     username: submitUsername,
     title,
     tagline,
     model,
     text,
-    image_url: image_url || null,
+    image_url: finalImageUrl,
     accepted: currentUser.role === 'admin',
     isTrending: false
   };
@@ -2210,39 +2318,12 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
     if(!res.ok) {
       const errorData = await res.json().catch(() => ({ error: 'Submission failed' }));
       const errorMessage = errorData.error || `Submission failed with status: ${res.status}`;
-      console.error('Submission error:', errorData);
-      
-      // Fallback to localStorage
-      const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-      const newPrompt = {
-        id: 'local_' + Date.now(),
-        ...promptData,
-        created_at: new Date().toISOString()
-      };
-      prompts.push(newPrompt);
-      setLocalStorage(STORAGE_KEYS.PROMPTS, prompts);
-      
-      showToast('Prompt submitted successfully! (local mode)');
-      
-      // Clear form but keep username if user is logged in
-      if (!currentUser.username) {
-        document.getElementById('fusername').value = '';
-      }
-      document.getElementById('ftitle').value = '';
-      document.getElementById('ftagline').value = '';
-      document.getElementById('fmodel').value = '';
-      document.getElementById('ftext').value = '';
-      document.getElementById('fimage').value = '';
-      document.getElementById('fpreview').innerHTML = '';
-      
-      loadGallery();
-      loadTrending();
-      loadMyPrompts();
+      alert(errorMessage);
       return;
     }
     
     const newPrompt = await res.json();
-    showToast('Prompt submitted successfully! Waiting for admin approval.');
+    showToast('Prompt submitted successfully!' + (currentUser.role === 'admin' ? '' : ' Waiting for admin approval.'));
     
     // Clear form but keep username if user is logged in
     if (!currentUser.username) {
@@ -2254,47 +2335,21 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
     document.getElementById('ftext').value = '';
     document.getElementById('fimage').value = '';
     document.getElementById('fpreview').innerHTML = '';
+    
+    // Reset file upload
+    const uploadPreview = document.getElementById('uploadPreview');
+    const uploadProgress = document.getElementById('uploadProgress');
+    uploadPreview.innerHTML = '';
+    uploadProgress.style.display = 'none';
+    uploadedImageUrl = null;
     
     loadGallery();
     loadTrending();
     loadMyPrompts();
     
   } catch(e) {
-    console.error('Submission error, using localStorage fallback:', e);
-    
-    // Fallback to localStorage
-    const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-    const newPrompt = {
-      id: 'local_' + Date.now(),
-      username: submitUsername,
-      title,
-      tagline,
-      model,
-      text,
-      image_url: image_url || null,
-      accepted: currentUser.role === 'admin',
-      isTrending: false,
-      created_at: new Date().toISOString()
-    };
-    prompts.push(newPrompt);
-    setLocalStorage(STORAGE_KEYS.PROMPTS, prompts);
-    
-    showToast('Prompt submitted successfully! (local mode)');
-    
-    // Clear form but keep username if user is logged in
-    if (!currentUser.username) {
-      document.getElementById('fusername').value = '';
-    }
-    document.getElementById('ftitle').value = '';
-    document.getElementById('ftagline').value = '';
-    document.getElementById('fmodel').value = '';
-    document.getElementById('ftext').value = '';
-    document.getElementById('fimage').value = '';
-    document.getElementById('fpreview').innerHTML = '';
-    
-    loadGallery();
-    loadTrending();
-    loadMyPrompts();
+    console.error('Submission error:', e);
+    alert('Submission failed. Please try again.');
   }
 });
 
@@ -2309,6 +2364,13 @@ document.getElementById('clearBtn').addEventListener('click', ()=>{
   document.getElementById('ftext').value = '';
   document.getElementById('fimage').value = '';
   document.getElementById('fpreview').innerHTML = '';
+  
+  // Reset file upload
+  const uploadPreview = document.getElementById('uploadPreview');
+  const uploadProgress = document.getElementById('uploadProgress');
+  uploadPreview.innerHTML = '';
+  uploadProgress.style.display = 'none';
+  uploadedImageUrl = null;
 });
 
 /* ---------- Toast ---------- */
