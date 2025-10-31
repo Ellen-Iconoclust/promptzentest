@@ -1113,11 +1113,10 @@
       <div>Made with ♥</div>
     </div>
   </footer>
-
-<script>
+  <script>
 /* ---------- CONFIG ---------- */
-// Update this with your Vercel backend URL after deployment
-const BACKEND_BASE = 'promptzentesterjs-backend12-3jjo.vercel.app';
+// Update this with your actual Vercel backend URL
+const BACKEND_BASE = 'promptzentesterjs-backend12-n3v7.vercel.app';
 /* ---------------------------- */
 
 let currentUser = { username:null, role:'user' };
@@ -1286,6 +1285,7 @@ async function doRegister(){
   }
 
   try {
+    console.log('Attempting registration for:', u);
     const res = await fetch(BACKEND_BASE + '/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1310,7 +1310,7 @@ async function doRegister(){
     }
   } catch(e) {
     console.error('Backend registration failed:', e);
-    alert('Registration failed. Please check your backend connection.');
+    alert('Registration failed. Please check your backend connection. Error: ' + e.message);
   }
 }
 
@@ -1320,31 +1320,42 @@ async function doLogin(){
   if(!u || !p) return alert('Please enter username and password');
 
   try {
+    console.log('Attempting login for:', u);
     const res = await fetch(BACKEND_BASE + '/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: u, password: p })
     });
 
+    // Check if response is ok first
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('Login failed with status:', res.status, errorText);
+      try {
+        const errorData = JSON.parse(errorText);
+        alert(errorData.error || 'Login failed');
+      } catch {
+        alert(`Login failed: ${res.status} ${errorText}`);
+      }
+      return;
+    }
+
     const responseData = await res.json();
     
-    if(res.ok) {
-      currentUser = { username: responseData.username, role: responseData.role };
-      setAuthToken(responseData.access_token);
-      setLocalStorage(STORAGE_KEYS.CURRENT_USER, currentUser);
-      showToast('Login successful!');
-      closeLogin();
-      updateAuthUI();
-      updateSubmitForm();
-      loadTrending();
-      loadGallery();
-      loadMyPrompts();
-    } else {
-      alert(responseData.error || 'Login failed');
-    }
+    currentUser = { username: responseData.username, role: responseData.role };
+    setAuthToken(responseData.access_token);
+    setLocalStorage(STORAGE_KEYS.CURRENT_USER, currentUser);
+    showToast('Login successful!');
+    closeLogin();
+    updateAuthUI();
+    updateSubmitForm();
+    loadTrending();
+    loadGallery();
+    loadMyPrompts();
+    
   } catch(e) {
     console.error('Backend login failed:', e);
-    alert('Login failed. Please check your backend connection.');
+    alert('Login failed. Please check your backend connection. Error: ' + e.message);
   }
 }
 
@@ -2212,3 +2223,4 @@ function updateSubmitForm() {
   navTo('home');
 })();
 </script>
+
