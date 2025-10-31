@@ -1115,8 +1115,8 @@
   </footer>
   <script>
 /* ---------- CONFIG ---------- */
-// ✅ FIXED: Added https:// protocol
-const BACKEND_BASE = 'https://promptzentesterjs-backend12-dyeo.vercel.app';
+// Update this with your actual Vercel backend URL
+const BACKEND_BASE = 'https://promptzentesterjs-backend12-n3v7.vercel.app';
 /* ---------------------------- */
 
 let currentUser = { username:null, role:'user' };
@@ -1270,7 +1270,6 @@ function openLogin(){
 }
 function closeLogin(){ document.getElementById('modal').style.display='none'; }
 
-// ✅ FIXED: Better error handling for registration
 async function doRegister(){
   const u = document.getElementById('registerUser').value.trim();
   const p = document.getElementById('registerPass').value;
@@ -1293,7 +1292,7 @@ async function doRegister(){
       body: JSON.stringify({ username: u, password: p })
     });
 
-    // ✅ FIXED: Better response handling
+    // Better response handling
     if (!res.ok) {
       const errorText = await res.text();
       console.error('Registration failed:', errorText);
@@ -1335,7 +1334,6 @@ async function doRegister(){
   }
 }
 
-// ✅ FIXED: Better error handling for login
 async function doLogin(){
   const u = document.getElementById('loginUser').value.trim();
   const p = document.getElementById('loginPass').value;
@@ -1349,7 +1347,7 @@ async function doLogin(){
       body: JSON.stringify({ username: u, password: p })
     });
 
-    // ✅ FIXED: Better response handling
+    // Better response handling
     if (!res.ok) {
       const errorText = await res.text();
       console.error('Login failed with status:', res.status, errorText);
@@ -2122,7 +2120,7 @@ document.getElementById('fimage').addEventListener('input', (e)=>{
   preview.appendChild(img);
 });
 
-// ✅ FIXED: Better submission handling
+// ✅ FIXED: Complete submission handling with authentication check
 document.getElementById('submitBtn').addEventListener('click', async ()=>{
   const username = document.getElementById('fusername').value.trim();
   const title = document.getElementById('ftitle').value.trim();
@@ -2135,20 +2133,24 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
     return alert('Please fill all required fields: Username, Title, Tagline, Model, and Prompt Text');
   }
 
-  // If user is logged in, use their username from account
-  const submitUsername = currentUser.username || username;
+  // ✅ FIXED: Check if user is logged in
+  if (!currentUser || !currentUser.username) {
+    alert('Please login first to submit a prompt!');
+    openLogin();
+    return;
+  }
 
   // Use uploaded image URL if available, otherwise use the URL input
   const finalImageUrl = uploadedImageUrl || image_url || null;
 
   const promptData = {
-    username: submitUsername,
+    username: currentUser.username, // Always use logged in username
     title,
     tagline,
     model,
     text,
     image_url: finalImageUrl,
-    accepted: currentUser.role === 'admin',
+    accepted: currentUser.role === 'admin', // Auto-approve if admin
     isTrending: false
   };
 
@@ -2165,6 +2167,12 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
       
       try {
         const errorData = JSON.parse(errorText);
+        if (errorData.error === 'Invalid token') {
+          alert('Your session has expired. Please login again.');
+          logout();
+          openLogin();
+          return;
+        }
         alert(errorData.error || 'Submission failed');
       } catch {
         alert(`Submission failed: ${errorText.substring(0, 100)}`);
@@ -2176,9 +2184,6 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
     showToast('Prompt submitted successfully!' + (currentUser.role === 'admin' ? '' : ' Waiting for admin approval.'));
     
     // Clear form but keep username if user is logged in
-    if (!currentUser.username) {
-      document.getElementById('fusername').value = '';
-    }
     document.getElementById('ftitle').value = '';
     document.getElementById('ftagline').value = '';
     document.getElementById('fmodel').value = '';
@@ -2207,9 +2212,6 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
 
 document.getElementById('clearBtn').addEventListener('click', ()=>{
   // Don't clear username if user is logged in
-  if (!currentUser.username) {
-    document.getElementById('fusername').value = '';
-  }
   document.getElementById('ftitle').value = '';
   document.getElementById('ftagline').value = '';
   document.getElementById('fmodel').value = '';
