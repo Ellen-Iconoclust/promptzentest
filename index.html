@@ -1115,8 +1115,8 @@
   </footer>
   <script>
 /* ---------- CONFIG ---------- */
-// Update this with your actual Vercel backend URL
-const BACKEND_BASE = 'promptzentesterjs-backend12-n3v7.vercel.app';
+// ✅ FIXED: Added https:// protocol
+const BACKEND_BASE = 'https://promptzentesterjs-backend12-n3v7.vercel.app';
 /* ---------------------------- */
 
 let currentUser = { username:null, role:'user' };
@@ -1270,6 +1270,7 @@ function openLogin(){
 }
 function closeLogin(){ document.getElementById('modal').style.display='none'; }
 
+// ✅ FIXED: Better error handling for registration
 async function doRegister(){
   const u = document.getElementById('registerUser').value.trim();
   const p = document.getElementById('registerPass').value;
@@ -1292,9 +1293,29 @@ async function doRegister(){
       body: JSON.stringify({ username: u, password: p })
     });
 
+    // ✅ FIXED: Better response handling
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('Registration failed:', errorText);
+      
+      // Try to parse as JSON, if not, show raw error
+      try {
+        const errorData = JSON.parse(errorText);
+        alert(errorData.error || 'Registration failed');
+      } catch {
+        // If it's HTML (like a 404 page), show generic error
+        if (errorText.includes('<!DOCTYPE') || errorText.includes('<html')) {
+          alert('Backend server returned an HTML page instead of JSON. Check your backend deployment.');
+        } else {
+          alert(`Registration failed: ${errorText.substring(0, 100)}`);
+        }
+      }
+      return;
+    }
+
     const responseData = await res.json();
     
-    if(res.ok) {
+    if(responseData.access_token) {
       currentUser = { username: responseData.username, role: responseData.role };
       setAuthToken(responseData.access_token);
       setLocalStorage(STORAGE_KEYS.CURRENT_USER, currentUser);
@@ -1310,10 +1331,11 @@ async function doRegister(){
     }
   } catch(e) {
     console.error('Backend registration failed:', e);
-    alert('Registration failed. Please check your backend connection. Error: ' + e.message);
+    alert('Registration failed. Please check your backend URL and deployment. Error: ' + e.message);
   }
 }
 
+// ✅ FIXED: Better error handling for login
 async function doLogin(){
   const u = document.getElementById('loginUser').value.trim();
   const p = document.getElementById('loginPass').value;
@@ -1327,31 +1349,40 @@ async function doLogin(){
       body: JSON.stringify({ username: u, password: p })
     });
 
-    // Check if response is ok first
+    // ✅ FIXED: Better response handling
     if (!res.ok) {
       const errorText = await res.text();
       console.error('Login failed with status:', res.status, errorText);
+      
       try {
         const errorData = JSON.parse(errorText);
         alert(errorData.error || 'Login failed');
       } catch {
-        alert(`Login failed: ${res.status} ${errorText}`);
+        if (errorText.includes('<!DOCTYPE') || errorText.includes('<html')) {
+          alert('Backend server returned an HTML page. Check your backend deployment.');
+        } else {
+          alert(`Login failed: ${res.status} ${errorText.substring(0, 100)}`);
+        }
       }
       return;
     }
 
     const responseData = await res.json();
     
-    currentUser = { username: responseData.username, role: responseData.role };
-    setAuthToken(responseData.access_token);
-    setLocalStorage(STORAGE_KEYS.CURRENT_USER, currentUser);
-    showToast('Login successful!');
-    closeLogin();
-    updateAuthUI();
-    updateSubmitForm();
-    loadTrending();
-    loadGallery();
-    loadMyPrompts();
+    if (responseData.access_token) {
+      currentUser = { username: responseData.username, role: responseData.role };
+      setAuthToken(responseData.access_token);
+      setLocalStorage(STORAGE_KEYS.CURRENT_USER, currentUser);
+      showToast('Login successful!');
+      closeLogin();
+      updateAuthUI();
+      updateSubmitForm();
+      loadTrending();
+      loadGallery();
+      loadMyPrompts();
+    } else {
+      alert(responseData.error || 'Login failed');
+    }
     
   } catch(e) {
     console.error('Backend login failed:', e);
@@ -2091,6 +2122,7 @@ document.getElementById('fimage').addEventListener('input', (e)=>{
   preview.appendChild(img);
 });
 
+// ✅ FIXED: Better submission handling
 document.getElementById('submitBtn').addEventListener('click', async ()=>{
   const username = document.getElementById('fusername').value.trim();
   const title = document.getElementById('ftitle').value.trim();
@@ -2128,9 +2160,15 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
     });
     
     if(!res.ok) {
-      const errorData = await res.json().catch(() => ({ error: 'Submission failed' }));
-      const errorMessage = errorData.error || `Submission failed with status: ${res.status}`;
-      alert(errorMessage);
+      const errorText = await res.text();
+      console.error('Submission failed:', errorText);
+      
+      try {
+        const errorData = JSON.parse(errorText);
+        alert(errorData.error || 'Submission failed');
+      } catch {
+        alert(`Submission failed: ${errorText.substring(0, 100)}`);
+      }
       return;
     }
     
@@ -2223,4 +2261,5 @@ function updateSubmitForm() {
   navTo('home');
 })();
 </script>
-
+</body>
+</html>
