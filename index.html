@@ -1117,7 +1117,7 @@
 <script>
 /* ---------- CONFIG ---------- */
 // Update this with your Vercel backend URL after deployment
-const BACKEND_BASE = 'https://promptzentesterjs-backend12copper.vercel.app/';
+const BACKEND_BASE = 'https://promptzentesterjs-backend12copper.vercel.app';
 /* ---------------------------- */
 
 let currentUser = { username:null, role:'user' };
@@ -1152,19 +1152,12 @@ function setLocalStorage(key, value) {
   }
 }
 
-// Initialize local storage with default data if empty
+// Clear any existing data and initialize fresh
 function initializeLocalStorage() {
-  const existingPrompts = getLocalStorage(STORAGE_KEYS.PROMPTS);
-  if (!existingPrompts || existingPrompts.length === 0) {
-    // Start with empty prompts for fresh installation
-    setLocalStorage(STORAGE_KEYS.PROMPTS, []);
-  }
-
-  const existingUsers = getLocalStorage(STORAGE_KEYS.USERS);
-  if (!existingUsers || Object.keys(existingUsers).length === 0) {
-    // Start with empty users for fresh installation
-    setLocalStorage(STORAGE_KEYS.USERS, {});
-  }
+  // Clear ALL existing data to start fresh
+  setLocalStorage(STORAGE_KEYS.PROMPTS, []);
+  setLocalStorage(STORAGE_KEYS.USERS, {});
+  console.log('Local storage initialized with empty data');
 }
 
 /* ---------- JWT Token Management ---------- */
@@ -1305,12 +1298,6 @@ async function doRegister(){
       currentUser = { username: responseData.username, role: responseData.role };
       setAuthToken(responseData.access_token);
       setLocalStorage(STORAGE_KEYS.CURRENT_USER, currentUser);
-      
-      // Store user in local storage for offline use
-      const users = getLocalStorage(STORAGE_KEYS.USERS, {});
-      users[u] = { password: p, role: 'user' };
-      setLocalStorage(STORAGE_KEYS.USERS, users);
-      
       showToast('Registration successful! You are now logged in.');
       closeLogin();
       updateAuthUI();
@@ -1323,26 +1310,7 @@ async function doRegister(){
     }
   } catch(e) {
     console.error('Backend registration failed:', e);
-    // Fallback to local storage
-    const users = getLocalStorage(STORAGE_KEYS.USERS, {});
-    if (users[u]) {
-      alert('Username already exists');
-      return;
-    }
-    
-    users[u] = { password: p, role: 'user' };
-    setLocalStorage(STORAGE_KEYS.USERS, users);
-    
-    currentUser = { username: u, role: 'user' };
-    setLocalStorage(STORAGE_KEYS.CURRENT_USER, currentUser);
-    
-    showToast('Registration successful (offline mode)!');
-    closeLogin();
-    updateAuthUI();
-    updateSubmitForm();
-    loadTrending();
-    loadGallery();
-    loadMyPrompts();
+    alert('Registration failed. Please check your backend connection.');
   }
 }
 
@@ -1376,23 +1344,7 @@ async function doLogin(){
     }
   } catch(e) {
     console.error('Backend login failed:', e);
-    // Fallback to local storage
-    const users = getLocalStorage(STORAGE_KEYS.USERS, {});
-    const user = users[u];
-    
-    if (user && user.password === p) {
-      currentUser = { username: u, role: user.role };
-      setLocalStorage(STORAGE_KEYS.CURRENT_USER, currentUser);
-      showToast('Login successful (offline mode)!');
-      closeLogin();
-      updateAuthUI();
-      updateSubmitForm();
-      loadTrending();
-      loadGallery();
-      loadMyPrompts();
-    } else {
-      alert('Invalid credentials');
-    }
+    alert('Login failed. Please check your backend connection.');
   }
 }
 
@@ -1507,7 +1459,7 @@ function initializeFileUpload() {
     const reader = new FileReader();
     reader.onload = (e) => {
       uploadPreview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 100%; border-radius: 8px;">`;
-      uploadedImageUrl = e.target.result; // Store base64 data
+      uploadedImageUrl = e.target.result;
     };
     reader.readAsDataURL(file);
 
@@ -1537,6 +1489,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ---------- Load stored user ---------- */
 (function(){
+  // Clear browser storage first to remove any old data
+  localStorage.removeItem('promptzen_prompts');
+  localStorage.removeItem('promptzen_users');
+  
   initializeLocalStorage();
   const user = getLocalStorage(STORAGE_KEYS.CURRENT_USER);
   const token = getLocalStorage(STORAGE_KEYS.TOKEN);
@@ -1547,21 +1503,17 @@ document.addEventListener('DOMContentLoaded', () => {
   updateAuthUI();
 })();
 
-/* ---------- Backend fetch functions with fallback ---------- */
+/* ---------- Backend fetch functions ---------- */
 async function fetchPromptsFromBackend(publicOnly = true) {
   try {
     const url = publicOnly ? '/api/prompts?public=true' : '/api/prompts';
     const res = await fetch(BACKEND_BASE + url);
     if (!res.ok) throw new Error('Fetch prompts failed');
     const prompts = await res.json();
-    
-    // Store in local storage for offline use
-    setLocalStorage(STORAGE_KEYS.PROMPTS, prompts);
-    
     return prompts;
   } catch (e) {
-    console.warn('Backend fetch failed, using local storage:', e);
-    return getLocalStorage(STORAGE_KEYS.PROMPTS, []);
+    console.warn('Backend fetch failed:', e);
+    return [];
   }
 }
 
@@ -1574,8 +1526,7 @@ async function fetchPendingPrompts() {
     return await res.json();
   } catch (e) {
     console.warn('Backend pending prompts fetch failed:', e);
-    const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-    return prompts.filter(p => !p.accepted);
+    return [];
   }
 }
 
@@ -1588,19 +1539,12 @@ async function fetchAdminStats() {
     return await res.json();
   } catch (e) {
     console.warn('Backend admin stats fetch failed:', e);
-    const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-    const totalPrompts = prompts.length;
-    const acceptedPrompts = prompts.filter(p => p.accepted).length;
-    const pendingPrompts = prompts.filter(p => !p.accepted).length;
-    const trendingPrompts = prompts.filter(p => p.isTrending && p.accepted).length;
-    const totalUsers = new Set(prompts.map(p => p.username)).size;
-    
     return {
-      total_prompts: totalPrompts,
-      accepted_prompts: acceptedPrompts,
-      pending_prompts: pendingPrompts,
-      trending_prompts: trendingPrompts,
-      total_users: totalUsers
+      total_prompts: 0,
+      accepted_prompts: 0,
+      pending_prompts: 0,
+      trending_prompts: 0,
+      total_users: 0
     };
   }
 }
@@ -1612,21 +1556,16 @@ async function fetchStatsFromBackend() {
     return await res.json();
   } catch (e) {
     console.warn('Backend stats fetch failed:', e);
-    const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-    const acceptedPrompts = prompts.filter(p => p.accepted);
-    const uniqueUsers = new Set(acceptedPrompts.map(p => p.username));
-    const trendingPrompts = acceptedPrompts.filter(p => p.isTrending);
-    
     return {
-      total_prompts: acceptedPrompts.length,
-      total_users: uniqueUsers.size,
-      trending_prompts: trendingPrompts.length,
+      total_prompts: 0,
+      total_users: 0,
+      trending_prompts: 0,
       categories: 0
     };
   }
 }
 
-/* ---------- Helper to get prompts: backend or fallback ---------- */
+/* ---------- Helper to get prompts ---------- */
 async function getTrendingPrompts() {
   const backend = await fetchPromptsFromBackend(true);
   if (Array.isArray(backend)) {
@@ -1653,20 +1592,12 @@ async function getMyPrompts() {
     
     if (res.ok) {
       const allPrompts = await res.json();
-      // Store in local storage
-      const currentPrompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-      const updatedPrompts = [...currentPrompts.filter(p => !allPrompts.some(ap => ap.id === p.id)), ...allPrompts];
-      setLocalStorage(STORAGE_KEYS.PROMPTS, updatedPrompts);
-      
       return allPrompts.filter(p => p.username === currentUser.username);
     }
-    // Fallback to localStorage
-    const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-    return prompts.filter(p => p.username === currentUser.username);
+    return [];
   } catch (e) {
     console.error('Error fetching my prompts:', e);
-    const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-    return prompts.filter(p => p.username === currentUser.username);
+    return [];
   }
 }
 
@@ -1835,13 +1766,11 @@ async function loadAdminDashboard() {
 async function loadAdminStats() {
   try {
     const stats = await fetchAdminStats();
-    if (stats) {
-      document.getElementById('adminTotalPrompts').textContent = stats.total_prompts;
-      document.getElementById('adminApprovedPrompts').textContent = stats.accepted_prompts;
-      document.getElementById('adminPendingPrompts').textContent = stats.pending_prompts;
-      document.getElementById('adminTrendingPrompts').textContent = stats.trending_prompts;
-      document.getElementById('adminTotalUsers').textContent = stats.total_users;
-    }
+    document.getElementById('adminTotalPrompts').textContent = stats.total_prompts;
+    document.getElementById('adminApprovedPrompts').textContent = stats.accepted_prompts;
+    document.getElementById('adminPendingPrompts').textContent = stats.pending_prompts;
+    document.getElementById('adminTrendingPrompts').textContent = stats.trending_prompts;
+    document.getElementById('adminTotalUsers').textContent = stats.total_users;
   } catch (e) {
     console.error('Error loading admin stats:', e);
   }
@@ -1938,14 +1867,6 @@ async function bulkApprovePrompts() {
     if (res.ok) {
       const result = await res.json();
       showToast(`Approved ${result.updated_count} prompts!`);
-      
-      // Update local storage
-      const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-      const updatedPrompts = prompts.map(p => 
-        selectedPrompts.has(p.id.toString()) ? { ...p, accepted: true } : p
-      );
-      setLocalStorage(STORAGE_KEYS.PROMPTS, updatedPrompts);
-      
       selectedPrompts.clear();
       updateBulkActions();
       loadAdminDashboard();
@@ -1978,12 +1899,6 @@ async function bulkRejectPrompts() {
     if (res.ok) {
       const result = await res.json();
       showToast(`Rejected ${result.updated_count} prompts!`);
-      
-      // Update local storage
-      const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-      const updatedPrompts = prompts.filter(p => !selectedPrompts.has(p.id.toString()));
-      setLocalStorage(STORAGE_KEYS.PROMPTS, updatedPrompts);
-      
       selectedPrompts.clear();
       updateBulkActions();
       loadAdminDashboard();
@@ -2009,14 +1924,6 @@ async function approvePrompt(promptId) {
 
     if (res.ok) {
       showToast('Prompt approved!');
-      
-      // Update local storage
-      const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-      const updatedPrompts = prompts.map(p => 
-        p.id.toString() === promptId ? { ...p, accepted: true } : p
-      );
-      setLocalStorage(STORAGE_KEYS.PROMPTS, updatedPrompts);
-      
       loadAdminDashboard();
       loadGallery();
       loadTrending();
@@ -2040,12 +1947,6 @@ async function rejectPrompt(promptId) {
 
     if (res.ok) {
       showToast('Prompt rejected and deleted');
-      
-      // Update local storage
-      const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-      const updatedPrompts = prompts.filter(p => p.id.toString() !== promptId);
-      setLocalStorage(STORAGE_KEYS.PROMPTS, updatedPrompts);
-      
       loadAdminDashboard();
       loadGallery();
       loadTrending();
@@ -2150,17 +2051,9 @@ async function loadMyPrompts(){
 async function updateStats(){
   try {
     const stats = await fetchStatsFromBackend();
-    if (stats) {
-      document.getElementById('statPrompts').textContent = stats.total_prompts;
-      document.getElementById('statUsers').textContent = stats.total_users;
-      document.getElementById('statCats').textContent = stats.categories;
-    } else {
-      const prompts = await getGalleryPrompts();
-      const users = new Set(prompts.map(p => p.username));
-      document.getElementById('statPrompts').textContent = prompts.length;
-      document.getElementById('statUsers').textContent = users.size;
-      document.getElementById('statCats').textContent = '0';
-    }
+    document.getElementById('statPrompts').textContent = stats.total_prompts;
+    document.getElementById('statUsers').textContent = stats.total_users;
+    document.getElementById('statCats').textContent = stats.categories;
   } catch (e) {
     console.error('Error updating stats:', e);
     document.getElementById('statPrompts').textContent = '0';
@@ -2233,11 +2126,6 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
     const newPrompt = await res.json();
     showToast('Prompt submitted successfully!' + (currentUser.role === 'admin' ? '' : ' Waiting for admin approval.'));
     
-    // Store in local storage for offline use
-    const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-    prompts.push(newPrompt);
-    setLocalStorage(STORAGE_KEYS.PROMPTS, prompts);
-    
     // Clear form but keep username if user is logged in
     if (!currentUser.username) {
       document.getElementById('fusername').value = '';
@@ -2264,50 +2152,7 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
     
   } catch(e) {
     console.error('Submission error:', e);
-    
-    // Fallback to local storage
-    const newPrompt = {
-      id: Date.now().toString(),
-      username: submitUsername,
-      title,
-      tagline,
-      model,
-      text,
-      image_url: finalImageUrl,
-      accepted: currentUser.role === 'admin',
-      isTrending: false,
-      created_at: new Date().toISOString()
-    };
-    
-    const prompts = getLocalStorage(STORAGE_KEYS.PROMPTS, []);
-    prompts.push(newPrompt);
-    setLocalStorage(STORAGE_KEYS.PROMPTS, prompts);
-    
-    showToast('Prompt submitted (offline mode)!' + (currentUser.role === 'admin' ? '' : ' Waiting for admin approval.'));
-    
-    // Clear form
-    if (!currentUser.username) {
-      document.getElementById('fusername').value = '';
-    }
-    document.getElementById('ftitle').value = '';
-    document.getElementById('ftagline').value = '';
-    document.getElementById('fmodel').value = '';
-    document.getElementById('ftext').value = '';
-    document.getElementById('fimage').value = '';
-    document.getElementById('fpreview').innerHTML = '';
-    
-    // Reset file upload
-    const uploadPreview = document.getElementById('uploadPreview');
-    const uploadProgress = document.getElementById('uploadProgress');
-    const fileInput = document.getElementById('fileInput');
-    uploadPreview.innerHTML = '';
-    uploadProgress.style.display = 'none';
-    fileInput.value = '';
-    uploadedImageUrl = null;
-    
-    loadGallery();
-    loadTrending();
-    loadMyPrompts();
+    alert('Submission failed. Please try again.');
   }
 });
 
@@ -2367,6 +2212,3 @@ function updateSubmitForm() {
   navTo('home');
 })();
 </script>
-
-</body> 
-</html>
