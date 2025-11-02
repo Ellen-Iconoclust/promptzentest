@@ -529,6 +529,78 @@
       font-weight: 600;
     }
 
+    /* Search Bar Styles */
+    .search-container {
+      max-width: var(--max-w);
+      margin: 0 auto 30px;
+      padding: 0 20px;
+    }
+    .search-bar {
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      padding: 14px 20px;
+      border: 2px solid #e5e7eb;
+      border-radius: 50px;
+      font-size: 16px;
+      background: var(--card);
+      transition: all 0.3s ease;
+      outline: none;
+      box-shadow: var(--shadow);
+    }
+    .search-input:focus {
+      border-color: var(--hover-purple);
+      box-shadow: 0 0 0 3px rgba(164, 107, 245, 0.1);
+    }
+    .search-input:hover {
+      border-color: var(--hover-purple);
+    }
+    .search-input::placeholder {
+      color: var(--muted);
+    }
+
+    /* About Page Styles */
+    .about-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .about-content h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .about-content p {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      color: #555;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .about-signature {
+      margin-top: 40px;
+      padding: 20px;
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+    .about-signature h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .about-signature p {
+      color: var(--muted);
+      text-align: center;
+      margin: 0;
+    }
+
     /* tag badge inside card if needed */
     .badge{
       display:inline-block;
@@ -781,6 +853,19 @@
       .file-upload-area {
         padding: 20px;
       }
+      .checkbox-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+      .checkbox-item .admin-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .checkbox-item .admin-actions .btn {
+        flex: 1;
+        min-width: auto;
+      }
     }
 
     @media (max-width: 480px) {
@@ -823,6 +908,12 @@
       .admin-stats {
         grid-template-columns: 1fr;
       }
+      .about-content h2 {
+        font-size: 2rem;
+      }
+      .about-content p {
+        font-size: 1rem;
+      }
     }
   </style>
 </head>
@@ -847,6 +938,7 @@
         <a id="navHome" class="active" href="#" onclick="navTo('home')">Home</a>
         <a id="navGallery" href="#" onclick="openModalPage('gallery')">Gallery</a>
         <a id="navMy" href="#" onclick="openModalPage('my')">My Prompts</a>
+        <a id="navAbout" href="#" onclick="openModalPage('about')">About</a>
         <a id="navAdmin" href="#" onclick="openModalPage('admin')" style="display:none">Admin</a>
         <a id="navLogin" href="#" onclick="openLogin()">Login</a>
       </nav>
@@ -863,6 +955,7 @@
       <a id="mobileNavHome" class="active" href="#" onclick="navToMobile('home')">Home</a>
       <a id="mobileNavGallery" href="#" onclick="openModalPageMobile('gallery')">Gallery</a>
       <a id="mobileNavMy" href="#" onclick="openModalPageMobile('my')">My Prompts</a>
+      <a id="mobileNavAbout" href="#" onclick="openModalPageMobile('about')">About</a>
       <a id="mobileNavAdmin" href="#" onclick="openModalPageMobile('admin')" style="display:none">Admin</a>
       <a id="mobileNavLogin" href="#" onclick="openLoginMobile()">Login</a>
     </div>
@@ -911,12 +1004,24 @@
   <!-- Modal Pages -->
   <div id="modalGallery" class="modal-page">
     <div class="modal-page-header">
-      <h2 style="font-family:'Space Grotesk',sans-serif;margin:0">Gallery</h2>
+      <h2 style="font-family:'Space Grotesk',sans-serif;margin:0;text-align:center;width:100%">Gallery</h2>
       <button class="close-modal" onclick="closeModalPage('gallery')">×</button>
     </div>
     <div class="modal-page-content">
-      <div class="muted" style="margin-bottom:12px">All community prompts with sample images</div>
+      <div class="muted" style="margin-bottom:12px;text-align:center">All community prompts with sample images</div>
+      
+      <!-- Search Bar -->
+      <div class="search-container">
+        <div class="search-bar">
+          <input type="text" id="searchInput" class="search-input" placeholder="Search prompts by title, tagline, or content..." />
+        </div>
+      </div>
+      
       <div id="galleryGrid" class="grid"></div>
+      <div id="noResults" style="display:none;text-align:center;padding:40px;color:var(--muted)">
+        <h3>No results found</h3>
+        <p>Try searching with different keywords</p>
+      </div>
     </div>
   </div>
 
@@ -993,6 +1098,47 @@
             <div class="muted" style="margin-top:8px">Prompts you submitted will appear here after submission.</div>
             <div id="myPromptsList" style="margin-top:12px"></div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- About Page Modal -->
+  <div id="modalAbout" class="modal-page">
+    <div class="modal-page-header">
+      <h2 style="font-family:'Space Grotesk',sans-serif;margin:0">About PromptZen</h2>
+      <button class="close-modal" onclick="closeModalPage('about')">×</button>
+    </div>
+    <div class="modal-page-content">
+      <div class="about-content">
+        <h2>Welcome to PromptZen</h2>
+        <p>
+          PromptZen is a revolutionary platform designed for AI enthusiasts, prompt engineers, and creative minds 
+          to discover, share, and collaborate on the most effective AI prompts. In the rapidly evolving world of 
+          artificial intelligence, the quality of prompts determines the quality of outputs. PromptZen serves as 
+          a centralized hub where the community can contribute their most successful prompts across various AI 
+          models including ChatGPT, Midjourney, DALL-E, Stable Diffusion, and more.
+        </p>
+        <p>
+          Our mission is to democratize access to high-quality AI prompts and foster a community where both 
+          beginners and experts can learn from each other. Whether you're looking to generate stunning visual 
+          art, craft compelling stories, solve complex problems, or simply explore the capabilities of modern 
+          AI systems, PromptZen provides the tools and community support to help you achieve your creative goals.
+        </p>
+        <p>
+          The platform features a curated gallery of trending prompts, user submission system with admin 
+          moderation, and an intuitive interface that makes prompt discovery and sharing seamless. Every 
+          prompt on our platform is carefully reviewed to ensure quality and relevance, maintaining a 
+          high standard for our growing community of AI practitioners.
+        </p>
+        <p>
+          Join us in shaping the future of human-AI collaboration. Share your insights, learn from others, 
+          and be part of the movement that's pushing the boundaries of what's possible with artificial intelligence.
+        </p>
+        
+        <div class="about-signature">
+          <h3>Ellen Iconoclust</h3>
+          <p>Lead Developer @ Code Ronins</p>
         </div>
       </div>
     </div>
@@ -1123,6 +1269,7 @@ let currentUser = { username:null, role:'user' };
 let authToken = localStorage.getItem('promptzen_token');
 let selectedPrompts = new Set();
 let uploadedImageUrl = null;
+let allGalleryPrompts = []; // Store all prompts for search functionality
 
 // Local storage keys
 const STORAGE_KEYS = {
@@ -1201,7 +1348,7 @@ function openLoginMobile() {
 }
 
 function navTo(page){
-  const pages = ['home','gallery','my','admin'];
+  const pages = ['home','gallery','my','about','admin'];
   pages.forEach(p=>{
     const pageEl = document.getElementById('page'+capitalize(p));
     if(pageEl) pageEl.classList.remove('active');
@@ -1211,7 +1358,7 @@ function navTo(page){
     if(mnav) mnav.classList.remove('active');
   });
   
-  const navId = (page === 'home') ? 'navHome' : (page === 'gallery' ? 'navGallery' : (page === 'admin' ? 'navAdmin' : 'navMy'));
+  const navId = (page === 'home') ? 'navHome' : (page === 'gallery' ? 'navGallery' : (page === 'admin' ? 'navAdmin' : (page === 'about' ? 'navAbout' : 'navMy')));
   const navItem = document.getElementById(navId);
   if(navItem) navItem.classList.add('active');
   const mobileItem = document.getElementById('mobileNav'+capitalize(page));
@@ -1233,6 +1380,9 @@ function openModalPage(page) {
   if(page === 'gallery') loadGallery();
   else if(page === 'my') loadMyPrompts();
   else if(page === 'admin') loadAdminDashboard();
+  else if(page === 'about') {
+    // About page doesn't need additional loading
+  }
 }
 function closeModalPage(page) {
   const el = document.getElementById('modal' + capitalize(page));
@@ -1527,6 +1677,54 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeFileUpload();
 });
 
+/* ---------- Search Functionality ---------- */
+function initializeSearch() {
+  const searchInput = document.getElementById('searchInput');
+  
+  searchInput.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase().trim();
+    filterGalleryPrompts(searchTerm);
+  });
+}
+
+function filterGalleryPrompts(searchTerm) {
+  const grid = document.getElementById('galleryGrid');
+  const noResults = document.getElementById('noResults');
+  
+  if (!searchTerm) {
+    // Show all prompts when search is empty
+    grid.innerHTML = '';
+    allGalleryPrompts.forEach(p => {
+      grid.appendChild(makeCardElement(p));
+    });
+    noResults.style.display = 'none';
+    return;
+  }
+
+  const filteredPrompts = allGalleryPrompts.filter(prompt => {
+    const searchableText = `
+      ${prompt.title || ''} 
+      ${prompt.tagline || ''} 
+      ${prompt.text || ''}
+      ${prompt.model || ''}
+      ${prompt.username || ''}
+    `.toLowerCase();
+    
+    return searchableText.includes(searchTerm);
+  });
+
+  grid.innerHTML = '';
+  
+  if (filteredPrompts.length === 0) {
+    noResults.style.display = 'block';
+  } else {
+    noResults.style.display = 'none';
+    filteredPrompts.forEach(p => {
+      grid.appendChild(makeCardElement(p));
+    });
+  }
+}
+
 /* ---------- Load stored user ---------- */
 (function(){
   // Clear browser storage first to remove any old data
@@ -1541,6 +1739,7 @@ document.addEventListener('DOMContentLoaded', () => {
     authToken = token;
   }
   updateAuthUI();
+  initializeSearch(); // Initialize search functionality
 })();
 
 /* ---------- Backend fetch functions ---------- */
@@ -1617,8 +1816,10 @@ async function getTrendingPrompts() {
 async function getGalleryPrompts() {
   const backend = await fetchPromptsFromBackend(true);
   if (Array.isArray(backend)) {
-    return backend.filter(p => p.accepted === true);
+    allGalleryPrompts = backend.filter(p => p.accepted === true);
+    return allGalleryPrompts;
   }
+  allGalleryPrompts = [];
   return [];
 }
 
@@ -2034,6 +2235,7 @@ async function loadGallery(){
     });
     if (res.ok) {
       prompts = await res.json();
+      allGalleryPrompts = prompts.filter(p => p.accepted === true);
     } else {
       prompts = await getGalleryPrompts();
     }
