@@ -1742,7 +1742,9 @@ function filterGalleryPrompts(searchTerm) {
     // Show all prompts when search is empty
     grid.innerHTML = '';
     allGalleryPrompts.forEach(p => {
-      grid.appendChild(makeCardElement(p));
+      const card = makeCardElement(p);
+      card.classList.add('visible'); // Make sure cards are visible
+      grid.appendChild(card);
     });
     noResults.style.display = 'none';
     return;
@@ -1767,7 +1769,9 @@ function filterGalleryPrompts(searchTerm) {
   } else {
     noResults.style.display = 'none';
     filteredPrompts.forEach(p => {
-      grid.appendChild(makeCardElement(p));
+      const card = makeCardElement(p);
+      card.classList.add('visible'); // Make sure cards are visible immediately
+      grid.appendChild(card);
     });
   }
 }
@@ -2297,15 +2301,15 @@ async function loadGallery(){
     return;
   }
   
-  prompts.forEach(p=>{
+  prompts.forEach(p => {
     const el = makeCardElement(p);
     grid.appendChild(el);
   });
   
-  setTimeout(()=> {
-    const cards = grid.querySelectorAll('.fade-in');
-    cards.forEach(c=> c.classList.add('visible'));
-  },80);
+  // Make cards visible immediately instead of with delay
+  const cards = grid.querySelectorAll('.fade-in');
+  cards.forEach(c => c.classList.add('visible'));
+  
   updateStats();
 }
 
